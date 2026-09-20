@@ -1,6 +1,6 @@
 TearFlagsLib = TearFlagsLib or RegisterMod("Tear Flags Library", 1)
-local build = 100
-local version = "1.1"
+local build = 101
+local version = "1.1.1"
 local localHolder = {}
 
 if TearFlagsLib.Release then
@@ -39,31 +39,30 @@ local function bitSet128FromIndex(x)
 end
 
 local sfx = SFXManager()
-local mod = TearFlagsLib
-mod.Release = build
-mod.Source = "tearflagslib"									-- !!!!!!!! If you embed this into your own mod, remember to set this variable
-mod.DataKey = localHolder.key or {}
-mod.BitSetZero = BitSet128(0, 0)
-mod.BitSetOne = BitSet128(-1, -1)
-mod.GuarenteedFlagTracker = bitSet128FromIndex(TearFlags.TEAR_EFFECT_COUNT + 1)
+TearFlagsLib.Release = build
+TearFlagsLib.Source = "tearflagslib"									-- !!!!!!!! If you embed this into your own mod, remember to set this variable
+TearFlagsLib.DataKey = localHolder.key or {}
+TearFlagsLib.BitSetZero = BitSet128(0, 0)
+TearFlagsLib.BitSetOne = BitSet128(-1, -1)
+TearFlagsLib.GuarenteedFlagTracker = bitSet128FromIndex(TearFlags.TEAR_EFFECT_COUNT + 1)
 
-mod.AntiRecursion = false
-mod.IsPollingForTearFlags = false
+TearFlagsLib.AntiRecursion = false
+TearFlagsLib.IsPollingForTearFlags = false
 
-mod.Flag = localHolder.flags or {}
-mod.IndexedFlags = localHolder.flagsN or 0
-mod.playerMimickingFamiliarMap = localHolder.mimics
-mod.playerMimickingEffectMap = localHolder.mimics2
-mod.UpdateLists = {}
-mod.RecursionBlockers = {Count = 0, NextIndex = 0}
+TearFlagsLib.Flag = localHolder.flags or {}
+TearFlagsLib.IndexedFlags = localHolder.flagsN or 0
+TearFlagsLib.playerMimickingFamiliarMap = localHolder.mimics
+TearFlagsLib.playerMimickingEffectMap = localHolder.mimics2
+TearFlagsLib.UpdateLists = {}
+TearFlagsLib.RecursionBlockers = {Count = 0, NextIndex = 0}
 
-include(mod.Source .. ".bitset_infinity")
-if mod.Updated then
-	mod.UpdateBitSetInfinity(mod.Flag)
-	mod.UpdateBitSetInfinity(localHolder.weapons)
+include(TearFlagsLib.Source .. ".bitset_infinity")
+if TearFlagsLib.Updated then
+	TearFlagsLib.UpdateBitSetInfinity(TearFlagsLib.Flag)
+	TearFlagsLib.UpdateBitSetInfinity(localHolder.weapons)
 end
 
-mod.Callback = {
+TearFlagsLib.Callback = {
 	-- Best-practice callbacks, these are the intended way to apply and respond to TearFlags
 	POLL_TEARFLAGS = {},					-- {entity, player, weaponFlag} -- Takes an optional WeaponFlag argument
 	POLL_CHANCELESS_TEARFLAGS = {},			-- Called by certain Lasers which do not roll for random-chance effects like Common Cold, but gain guarenteed effects like Scorpio {entity, player, weaponFlag}
@@ -105,17 +104,17 @@ end
 
 -- Callbacks that take BitSetInfinity values as optional arguments
 for _, callback in pairs({
-	mod.Callback.POLL_TEARFLAGS,
-	mod.Callback.POLL_CHANCELESS_TEARFLAGS,
+	TearFlagsLib.Callback.POLL_TEARFLAGS,
+	TearFlagsLib.Callback.POLL_CHANCELESS_TEARFLAGS,
 
-	mod.Callback.PRE_ADD_TEARFLAG,
-	mod.Callback.POST_ADD_TEARFLAG,
-	mod.Callback.POST_COPY_TEARFLAGS,
-	mod.Callback.PRE_REMOVE_TEARFLAG,
-	mod.Callback.POST_REMOVE_TEARFLAG,
+	TearFlagsLib.Callback.PRE_ADD_TEARFLAG,
+	TearFlagsLib.Callback.POST_ADD_TEARFLAG,
+	TearFlagsLib.Callback.POST_COPY_TEARFLAGS,
+	TearFlagsLib.Callback.PRE_REMOVE_TEARFLAG,
+	TearFlagsLib.Callback.POST_REMOVE_TEARFLAG,
 
-	mod.Callback.PRE_POLL_TEARFLAGS,
-	mod.Callback.POST_POLL_TEARFLAGS,
+	TearFlagsLib.Callback.PRE_POLL_TEARFLAGS,
+	TearFlagsLib.Callback.POST_POLL_TEARFLAGS,
 }) do
 	setmetatable(Isaac.GetCallbacks(callback, true), {
 		__matchParams = paramsTestFlagMatch
@@ -126,25 +125,25 @@ end
 -- This makes sure mods that regsiter callbacks on these old addresses still get their code run
 if localHolder.callback then
 	for key, callbackAddress in pairs(localHolder.callback) do
-		mod.Callback[key] = callbackAddress
+		TearFlagsLib.Callback[key] = callbackAddress
 	end
 end
 
-mod.WeaponFlag = localHolder.weapons or {
+TearFlagsLib.WeaponFlag = localHolder.weapons or {
 	NUM_FLAGS = 0
 }
 
-mod.WeaponIdentityFunctions = localHolder.weaponIdentity or {}
+TearFlagsLib.WeaponIdentityFunctions = localHolder.weaponIdentity or {}
 
 -- Provides a more efficient, cached wrapper for GetData.
-include(mod.Source .. ".getdatacache")
+include(TearFlagsLib.Source .. ".getdatacache")
 
-function mod.GetSafeData(entity)
+function TearFlagsLib.GetSafeData(entity)
 	local data = GetDataCache.GetEntityData(entity)
-	data[mod.DataKey] = data[mod.DataKey] or {
+	data[TearFlagsLib.DataKey] = data[TearFlagsLib.DataKey] or {
 		checkedFlags = false,
-		tearFlags = mod.BitSetInfinity.Zero,
-		vanillaFlags = mod.BitSetZero,
+		tearFlags = TearFlagsLib.BitSetInfinity.Zero,
+		vanillaFlags = TearFlagsLib.BitSetZero,
 		entityBlacklist = {General = {}},
 		copyBlacklist = {},
 		customParams = {},
@@ -158,23 +157,23 @@ function mod.GetSafeData(entity)
 		},
 	}
 
-	return data[mod.DataKey]
+	return data[TearFlagsLib.DataKey]
 end
 
-function mod.SetAntiRecursion()
-	local key = "RECURSOR" .. mod.RecursionBlockers.NextIndex
-	mod.RecursionBlockers[key] = true
-	mod.RecursionBlockers.Count = mod.RecursionBlockers.Count + 1
-	mod.RecursionBlockers.NextIndex = mod.RecursionBlockers.NextIndex + 1
-	mod.AntiRecursion = true
+function TearFlagsLib.SetAntiRecursion()
+	local key = "RECURSOR" .. TearFlagsLib.RecursionBlockers.NextIndex
+	TearFlagsLib.RecursionBlockers[key] = true
+	TearFlagsLib.RecursionBlockers.Count = TearFlagsLib.RecursionBlockers.Count + 1
+	TearFlagsLib.RecursionBlockers.NextIndex = TearFlagsLib.RecursionBlockers.NextIndex + 1
+	TearFlagsLib.AntiRecursion = true
 	return key
 end
 
-function mod.ClearAntiRecursion(key)
-	if not mod.RecursionBlockers[key] then return false end
-	mod.RecursionBlockers[key] = nil
-	mod.RecursionBlockers.Count = math.max(0, mod.RecursionBlockers.Count)
-	mod.AntiRecursion = mod.RecursionBlockers.Count == 0
+function TearFlagsLib.ClearAntiRecursion(key)
+	if not TearFlagsLib.RecursionBlockers[key] then return false end
+	TearFlagsLib.RecursionBlockers[key] = nil
+	TearFlagsLib.RecursionBlockers.Count = math.max(0, TearFlagsLib.RecursionBlockers.Count)
+	TearFlagsLib.AntiRecursion = TearFlagsLib.RecursionBlockers.Count == 0
 end
 
 local function getValidatedCustomParams(data, key)
@@ -182,125 +181,125 @@ local function getValidatedCustomParams(data, key)
 	return data.customParams[key]
 end
 
-function mod.RegisterTearFlag(flagKey) -- Called either as RegisterTearFlag("NAME") or RegisterTearFlag({"NAME1", "NAME2", "NAME3"})
+function TearFlagsLib.RegisterTearFlag(flagKey) -- Called either as RegisterTearFlag("NAME") or RegisterTearFlag({"NAME1", "NAME2", "NAME3"})
 	if type(flagKey) == "table" then
 		local indexes = {}
 		for _, flag in pairs(flagKey) do
-			table.insert(indexes, mod.RegisterTearFlag(flag))
+			table.insert(indexes, TearFlagsLib.RegisterTearFlag(flag))
 		end
 
 		return table.unpack(indexes)
 	elseif type(flagKey) == "string" then
-		if mod.Flag[flagKey] then return mod.Flag[flagKey] end
+		if TearFlagsLib.Flag[flagKey] then return TearFlagsLib.Flag[flagKey] end
 
-		mod.Flag[flagKey] = mod.BitSetInfinity.FromIndex(mod.IndexedFlags)
-		mod.IndexedFlags = mod.IndexedFlags + 1
+		TearFlagsLib.Flag[flagKey] = TearFlagsLib.BitSetInfinity.FromIndex(TearFlagsLib.IndexedFlags)
+		TearFlagsLib.IndexedFlags = TearFlagsLib.IndexedFlags + 1
 
-		return mod.Flag[flagKey]
+		return TearFlagsLib.Flag[flagKey]
 	end
 end
 
-function mod.RegisterWeapon(weaponKey) -- Called either as RegisterWeapon("NAME") or RegisterWeapon({"NAME1", "NAME2", "NAME3"})
+function TearFlagsLib.RegisterWeapon(weaponKey) -- Called either as RegisterWeapon("NAME") or RegisterWeapon({"NAME1", "NAME2", "NAME3"})
 	if type(weaponKey) == "table" then
 		local indexes = {}
 		for _, flag in pairs(weaponKey) do
-			table.insert(indexes, mod.RegisterWeapon(flag))
+			table.insert(indexes, TearFlagsLib.RegisterWeapon(flag))
 		end
 
 		return table.unpack(indexes)
 	elseif type(weaponKey) == "string" then
-		if mod.WeaponFlag[weaponKey] then return mod.WeaponFlag[weaponKey] end
+		if TearFlagsLib.WeaponFlag[weaponKey] then return TearFlagsLib.WeaponFlag[weaponKey] end
 		
-		mod.WeaponFlag[weaponKey] = mod.BitSetInfinity.FromIndex(mod.WeaponFlag.NUM_FLAGS)
-		mod.WeaponFlag.NUM_FLAGS = mod.WeaponFlag.NUM_FLAGS + 1
+		TearFlagsLib.WeaponFlag[weaponKey] = TearFlagsLib.BitSetInfinity.FromIndex(TearFlagsLib.WeaponFlag.NUM_FLAGS)
+		TearFlagsLib.WeaponFlag.NUM_FLAGS = TearFlagsLib.WeaponFlag.NUM_FLAGS + 1
 
 
-		return mod.WeaponFlag[weaponKey]
+		return TearFlagsLib.WeaponFlag[weaponKey]
 	end	
 end
 
-mod.RegisterWeapon({"TEAR", "LASER", "KNIFE", "CLUB", "AQUARIUS", "DARK_ARTS", "DR_FETUS", "EPIC_FETUS", "LOCUST", "UMBILICAL_WHIP", "BRIMSTONE_BALL", "ANTI_GRAV_LASER", "SWORD", "OCULAR_RIFT", "HEMOPTYSIS", "CLUB_EPIC_FETUS"})
-mod.RegisterWeapon({"LUDOVICO_TEAR", "BOBS_ROTTEN_HEAD", "SHARP_KEY"}) -- Tear Semi-Weapons. These WeaponTypes are only used in *some* callbacks, where they may be expected to behave differently than their "true" WeaponType
-mod.TEAR_VARIANT_WEAPON_FLAGS = mod.WeaponFlag.TEAR | mod.WeaponFlag.LUDOVICO_TEAR | mod.WeaponFlag.BOBS_ROTTEN_HEAD | mod.WeaponFlag.SHARP_KEY
-mod.LASER_VARIANT_WEAPON_FLAGS = mod.WeaponFlag.LASER | mod.WeaponFlag.ANTI_GRAV_LASER | mod.WeaponFlag.BRIMSTONE_BALL
-mod.EPIC_FETUS_VARIANT_WEAPON_FLAGS = mod.WeaponFlag.EPIC_FETUS | mod.WeaponFlag.CLUB_EPIC_FETUS
-mod.NO_SPLITSHOT_WEAPON_FLAGS = mod.WeaponFlag.AQUARIUS | mod.WeaponFlag.DARK_ARTS | mod.WeaponFlag.EPIC_FETUS | mod.WeaponFlag.UMBILICAL_WHIP | mod.WeaponFlag.BRIMSTONE_BALL | mod.WeaponFlag.ANTI_GRAV_LASER | mod.WeaponFlag.SWORD | mod.WeaponFlag.OCULAR_RIFT | mod.WeaponFlag.HEMOPTYSIS | mod.WeaponFlag.CLUB_EPIC_FETUS
-mod.NO_COLOR_WEAPON_FLAGS = mod.WeaponFlag.LASER | mod.WeaponFlag.ANTI_GRAV_LASER | mod.WeaponFlag.KNIFE | mod.WeaponFlag.DARK_ARTS | mod.WeaponFlag.LOCUST | mod.WeaponFlag.UMBILICAL_WHIP | mod.WeaponFlag.BRIMSTONE_BALL | mod.WeaponFlag.BOBS_ROTTEN_HEAD | mod.WeaponFlag.SHARP_KEY | mod.WeaponFlag.OCULAR_RIFT | mod.WeaponFlag.HEMOPTYSIS | mod.WeaponFlag.AQUARIUS | mod.WeaponFlag.EPIC_FETUS | mod.WeaponFlag.CLUB_EPIC_FETUS
-mod.VANILLA_WEAPON_FLAGS = mod.WeaponFlag.TEAR | mod.WeaponFlag.LASER | mod.WeaponFlag.KNIFE | mod.WeaponFlag.CLUB | mod.WeaponFlag.AQUARIUS | mod.WeaponFlag.DARK_ARTS | mod.WeaponFlag.DR_FETUS | mod.WeaponFlag.EPIC_FETUS | mod.WeaponFlag.LOCUST | mod.WeaponFlag.UMBILICAL_WHIP | mod.WeaponFlag.BRIMSTONE_BALL | mod.WeaponFlag.ANTI_GRAV_LASER | mod.WeaponFlag.SWORD | mod.WeaponFlag.OCULAR_RIFT | mod.WeaponFlag.HEMOPTYSIS | mod.WeaponFlag.CLUB_EPIC_FETUS | mod.WeaponFlag.SHARP_KEY | mod.WeaponFlag.BOBS_ROTTEN_HEAD
+TearFlagsLib.RegisterWeapon({"TEAR", "LASER", "KNIFE", "CLUB", "AQUARIUS", "DARK_ARTS", "DR_FETUS", "EPIC_FETUS", "LOCUST", "UMBILICAL_WHIP", "BRIMSTONE_BALL", "ANTI_GRAV_LASER", "SWORD", "OCULAR_RIFT", "HEMOPTYSIS", "CLUB_EPIC_FETUS"})
+TearFlagsLib.RegisterWeapon({"LUDOVICO_TEAR", "BOBS_ROTTEN_HEAD", "SHARP_KEY"}) -- Tear Semi-Weapons. These WeaponTypes are only used in *some* callbacks, where they may be expected to behave differently than their "true" WeaponType
+TearFlagsLib.TEAR_VARIANT_WEAPON_FLAGS = TearFlagsLib.WeaponFlag.TEAR | TearFlagsLib.WeaponFlag.LUDOVICO_TEAR | TearFlagsLib.WeaponFlag.BOBS_ROTTEN_HEAD | TearFlagsLib.WeaponFlag.SHARP_KEY
+TearFlagsLib.LASER_VARIANT_WEAPON_FLAGS = TearFlagsLib.WeaponFlag.LASER | TearFlagsLib.WeaponFlag.ANTI_GRAV_LASER | TearFlagsLib.WeaponFlag.BRIMSTONE_BALL
+TearFlagsLib.EPIC_FETUS_VARIANT_WEAPON_FLAGS = TearFlagsLib.WeaponFlag.EPIC_FETUS | TearFlagsLib.WeaponFlag.CLUB_EPIC_FETUS
+TearFlagsLib.NO_SPLITSHOT_WEAPON_FLAGS = TearFlagsLib.WeaponFlag.AQUARIUS | TearFlagsLib.WeaponFlag.DARK_ARTS | TearFlagsLib.WeaponFlag.EPIC_FETUS | TearFlagsLib.WeaponFlag.UMBILICAL_WHIP | TearFlagsLib.WeaponFlag.BRIMSTONE_BALL | TearFlagsLib.WeaponFlag.ANTI_GRAV_LASER | TearFlagsLib.WeaponFlag.SWORD | TearFlagsLib.WeaponFlag.OCULAR_RIFT | TearFlagsLib.WeaponFlag.HEMOPTYSIS | TearFlagsLib.WeaponFlag.CLUB_EPIC_FETUS
+TearFlagsLib.NO_COLOR_WEAPON_FLAGS = TearFlagsLib.WeaponFlag.LASER | TearFlagsLib.WeaponFlag.ANTI_GRAV_LASER | TearFlagsLib.WeaponFlag.KNIFE | TearFlagsLib.WeaponFlag.DARK_ARTS | TearFlagsLib.WeaponFlag.LOCUST | TearFlagsLib.WeaponFlag.UMBILICAL_WHIP | TearFlagsLib.WeaponFlag.BRIMSTONE_BALL | TearFlagsLib.WeaponFlag.BOBS_ROTTEN_HEAD | TearFlagsLib.WeaponFlag.SHARP_KEY | TearFlagsLib.WeaponFlag.OCULAR_RIFT | TearFlagsLib.WeaponFlag.HEMOPTYSIS | TearFlagsLib.WeaponFlag.AQUARIUS | TearFlagsLib.WeaponFlag.EPIC_FETUS | TearFlagsLib.WeaponFlag.CLUB_EPIC_FETUS
+TearFlagsLib.VANILLA_WEAPON_FLAGS = TearFlagsLib.WeaponFlag.TEAR | TearFlagsLib.WeaponFlag.LASER | TearFlagsLib.WeaponFlag.KNIFE | TearFlagsLib.WeaponFlag.CLUB | TearFlagsLib.WeaponFlag.AQUARIUS | TearFlagsLib.WeaponFlag.DARK_ARTS | TearFlagsLib.WeaponFlag.DR_FETUS | TearFlagsLib.WeaponFlag.EPIC_FETUS | TearFlagsLib.WeaponFlag.LOCUST | TearFlagsLib.WeaponFlag.UMBILICAL_WHIP | TearFlagsLib.WeaponFlag.BRIMSTONE_BALL | TearFlagsLib.WeaponFlag.ANTI_GRAV_LASER | TearFlagsLib.WeaponFlag.SWORD | TearFlagsLib.WeaponFlag.OCULAR_RIFT | TearFlagsLib.WeaponFlag.HEMOPTYSIS | TearFlagsLib.WeaponFlag.CLUB_EPIC_FETUS | TearFlagsLib.WeaponFlag.SHARP_KEY | TearFlagsLib.WeaponFlag.BOBS_ROTTEN_HEAD
 
-if localHolder.tearWeapons then mod.TEAR_VARIANT_WEAPON_FLAGS = mod.TEAR_VARIANT_WEAPON_FLAGS | localHolder.tearWeapons end
-if localHolder.laserWeapons then mod.LASER_VARIANT_WEAPON_FLAGS = mod.LASER_VARIANT_WEAPON_FLAGS | localHolder.laserWeapons end
-if localHolder.epicFetusWeapons then mod.EPIC_FETUS_VARIANT_WEAPON_FLAGS = mod.EPIC_FETUS_VARIANT_WEAPON_FLAGS | localHolder.epicFetusWeapons end
-if localHolder.noColorWeapons then mod.NO_COLOR_WEAPON_FLAGS = mod.NO_COLOR_WEAPON_FLAGS | localHolder.noColorWeapons end
-if localHolder.noSplitshotsWeapons then mod.NO_SPLITSHOT_WEAPON_FLAGS = mod.NO_SPLITSHOT_WEAPON_FLAGS | localHolder.noSplitshotsWeapons end
+if localHolder.tearWeapons then TearFlagsLib.TEAR_VARIANT_WEAPON_FLAGS = TearFlagsLib.TEAR_VARIANT_WEAPON_FLAGS | localHolder.tearWeapons end
+if localHolder.laserWeapons then TearFlagsLib.LASER_VARIANT_WEAPON_FLAGS = TearFlagsLib.LASER_VARIANT_WEAPON_FLAGS | localHolder.laserWeapons end
+if localHolder.epicFetusWeapons then TearFlagsLib.EPIC_FETUS_VARIANT_WEAPON_FLAGS = TearFlagsLib.EPIC_FETUS_VARIANT_WEAPON_FLAGS | localHolder.epicFetusWeapons end
+if localHolder.noColorWeapons then TearFlagsLib.NO_COLOR_WEAPON_FLAGS = TearFlagsLib.NO_COLOR_WEAPON_FLAGS | localHolder.noColorWeapons end
+if localHolder.noSplitshotsWeapons then TearFlagsLib.NO_SPLITSHOT_WEAPON_FLAGS = TearFlagsLib.NO_SPLITSHOT_WEAPON_FLAGS | localHolder.noSplitshotsWeapons end
 
-function mod.IsWeaponTearVariant(flag)
-	return mod.TEAR_VARIANT_WEAPON_FLAGS:HasFlags(flag)
+function TearFlagsLib.IsWeaponTearVariant(flag)
+	return TearFlagsLib.TEAR_VARIANT_WEAPON_FLAGS:HasFlags(flag)
 end
 
-function mod.IsWeaponLaserVariant(flag)
-	return mod.LASER_VARIANT_WEAPON_FLAGS:HasFlags(flag)
+function TearFlagsLib.IsWeaponLaserVariant(flag)
+	return TearFlagsLib.LASER_VARIANT_WEAPON_FLAGS:HasFlags(flag)
 end
 
-function mod.IsWeaponEpicFetusVariant(flag)
-	return mod.EPIC_FETUS_VARIANT_WEAPON_FLAGS:HasFlags(flag)
+function TearFlagsLib.IsWeaponEpicFetusVariant(flag)
+	return TearFlagsLib.EPIC_FETUS_VARIANT_WEAPON_FLAGS:HasFlags(flag)
 end
 
-function mod.DoesWeaponBlockSplitshots(flag) -- Don't treat this as gospel, there is a line somewhere between an effect that spawns tears, and a true split-shot. Idk where that line is though. That's your choice.
-	return mod.NO_SPLITSHOT_WEAPON_FLAGS:HasFlags(flag)
+function TearFlagsLib.DoesWeaponBlockSplitshots(flag) -- Don't treat this as gospel, there is a line somewhere between an effect that spawns tears, and a true split-shot. Idk where that line is though. That's your choice.
+	return TearFlagsLib.NO_SPLITSHOT_WEAPON_FLAGS:HasFlags(flag)
 end
 
-function mod.ShouldWeaponGainEntityColor(flag) -- By default this returns false for everything except TEAR, LUDOVICO_TEAR, CLUB, and DR_FETUS
-	return not mod.NO_COLOR_WEAPON_FLAGS:HasFlags(flag)
+function TearFlagsLib.ShouldWeaponGainEntityColor(flag) -- By default this returns false for everything except TEAR, LUDOVICO_TEAR, CLUB, and DR_FETUS
+	return not TearFlagsLib.NO_COLOR_WEAPON_FLAGS:HasFlags(flag)
 end
 
-function mod.IsVanillaWeapon(flag)
-	return mod.VANILLA_WEAPON_FLAGS:HasFlags(flag)
+function TearFlagsLib.IsVanillaWeapon(flag)
+	return TearFlagsLib.VANILLA_WEAPON_FLAGS:HasFlags(flag)
 end
 
-function mod.IsModdedWeapon(flag)
-	return not mod.VANILLA_WEAPON_FLAGS:HasFlags(flag)
+function TearFlagsLib.IsModdedWeapon(flag)
+	return not TearFlagsLib.VANILLA_WEAPON_FLAGS:HasFlags(flag)
 end
 
-function mod.IsTearSplitTear(entity)
-	return mod.GetSafeData(entity).isSplitTear
+function TearFlagsLib.IsTearSplitTear(entity)
+	return TearFlagsLib.GetSafeData(entity).isSplitTear
 end
 
-function mod.RegisterWeaponIdentityFunction(weaponFlag, func)
-	mod.WeaponIdentityFunctions[weaponFlag] = func
+function TearFlagsLib.RegisterWeaponIdentityFunction(weaponFlag, func)
+	TearFlagsLib.WeaponIdentityFunctions[weaponFlag] = func
 end
 
-function mod.RegisterPlayerMimicFamiliar(familiarVariant)
+function TearFlagsLib.RegisterPlayerMimicFamiliar(familiarVariant)
 	if type(familiarVariant) == "table" then
 		for _, variant in pairs(familiarVariant) do
-			mod.playerMimickingFamiliarMap[variant] = true
+			TearFlagsLib.playerMimickingFamiliarMap[variant] = true
 		end
 	elseif type(familiarVariant) == "number" then
-		mod.playerMimickingFamiliarMap[familiarVariant] = true 
+		TearFlagsLib.playerMimickingFamiliarMap[familiarVariant] = true 
 	end
 end
 
-function mod.RegisterPlayerMimicEffect(effectVariant)
+function TearFlagsLib.RegisterPlayerMimicEffect(effectVariant)
 	if type(effectVariant) == "table" then
 		for _, variant in pairs(effectVariant) do
-			mod.playerMimickingEffectMap[variant] = true
+			TearFlagsLib.playerMimickingEffectMap[variant] = true
 		end
 	elseif type(effectVariant) == "number" then
-		mod.playerMimickingEffectMap[effectVariant] = true 
+		TearFlagsLib.playerMimickingEffectMap[effectVariant] = true 
 	end
 end
 
-function mod.AddTearFlags(entity, flags, force)
-	local data = mod.GetSafeData(entity)
-	local player = mod.GetTearPlayer(entity)
+function TearFlagsLib.AddTearFlags(entity, flags, force)
+	local data = TearFlagsLib.GetSafeData(entity)
+	local player = TearFlagsLib.GetTearPlayer(entity)
 
 	flags:ForEach(function(flag)
 		local skipAdd = false
 
 		if not force then
-			for _, callbackData in pairs(Isaac.GetCallbacks(mod.Callback.PRE_ADD_TEARFLAG)) do
+			for _, callbackData in pairs(Isaac.GetCallbacks(TearFlagsLib.Callback.PRE_ADD_TEARFLAG)) do
 				if not callbackData.Param or callbackData.Param & flag == flag then
-					if callbackData.Function(callbackData.Mod, entity, player, not not mod.IsPollingForTearFlags, mod.IsPollingForTearFlags, flag) then 
+					if callbackData.Function(callbackData.Mod, entity, player, not not TearFlagsLib.IsPollingForTearFlags, TearFlagsLib.IsPollingForTearFlags, flag) then 
 						skipAdd = true 
 						break
 					end
@@ -312,39 +311,39 @@ function mod.AddTearFlags(entity, flags, force)
 			flag:EqualiseLength(data.tearFlags)
 			data.tearFlags = data.tearFlags | flag
 			
-			for _, callbackData in pairs(Isaac.GetCallbacks(mod.Callback.POST_ADD_TEARFLAG)) do
+			for _, callbackData in pairs(Isaac.GetCallbacks(TearFlagsLib.Callback.POST_ADD_TEARFLAG)) do
 				if not callbackData.Param or callbackData.Param & flag == flag then
-					callbackData.Function(callbackData.Mod, entity, player, not not mod.IsPollingForTearFlags, mod.IsPollingForTearFlags, flag)
+					callbackData.Function(callbackData.Mod, entity, player, not not TearFlagsLib.IsPollingForTearFlags, TearFlagsLib.IsPollingForTearFlags, flag)
 				end
 			end
 		end
 	end)
 end
 
-function mod.GetTearFlags(entity)
-	return mod.GetSafeData(entity).tearFlags:Clone()
+function TearFlagsLib.GetTearFlags(entity)
+	return TearFlagsLib.GetSafeData(entity).tearFlags:Clone()
 end
 
-function mod.HasTearFlags(entity, flags)
-	local data = mod.GetSafeData(entity)
+function TearFlagsLib.HasTearFlags(entity, flags)
+	local data = TearFlagsLib.GetSafeData(entity)
 	return data.tearFlags & flags == flags
 end
 
-function mod.HasAnyTearFlags(entity)
-	local data = mod.GetSafeData(entity)
-	return data.tearFlags ~= mod.BitSetInfinity.Zero
+function TearFlagsLib.HasAnyTearFlags(entity)
+	local data = TearFlagsLib.GetSafeData(entity)
+	return data.tearFlags ~= TearFlagsLib.BitSetInfinity.Zero
 end
 
-function mod.ClearTearFlags(entity, flags, force)
-	local data = mod.GetSafeData(entity)
+function TearFlagsLib.ClearTearFlags(entity, flags, force)
+	local data = TearFlagsLib.GetSafeData(entity)
 	flags = flags & data.tearFlags -- Data validation for the callback
 	
 	flags:ForEach(function(flag)
-		local player = mod.GetTearPlayer(entity)
+		local player = TearFlagsLib.GetTearPlayer(entity)
 		local canRemove = true
 
 		if not force then
-			for _, callbackData in pairs(Isaac.GetCallbacks(mod.Callback.PRE_REMOVE_TEARFLAG)) do
+			for _, callbackData in pairs(Isaac.GetCallbacks(TearFlagsLib.Callback.PRE_REMOVE_TEARFLAG)) do
 				if not callbackData.Param or callbackData.Param & flag == flag then
 					if callbackData.Function(callbackData.Mod, entity, player, flag) then 
 						canRemove = false 
@@ -358,12 +357,12 @@ function mod.ClearTearFlags(entity, flags, force)
 			flag:EqualiseLength(data.tearFlags)
 			data.tearFlags = data.tearFlags &~ flag
 
-			local params = mod.GetTearFlagParams(entity, flag)
+			local params = TearFlagsLib.GetTearFlagParams(entity, flag)
 			if not params.KeepParamsOnFlagRemove then
-				mod.ClearTearFlagParams(entity, flag)
+				TearFlagsLib.ClearTearFlagParams(entity, flag)
 			end
 
-			for _, callbackData in pairs(Isaac.GetCallbacks(mod.Callback.POST_REMOVE_TEARFLAG)) do
+			for _, callbackData in pairs(Isaac.GetCallbacks(TearFlagsLib.Callback.POST_REMOVE_TEARFLAG)) do
 				if not callbackData.Param or callbackData.Param & flag == flag then
 					callbackData.Function(callbackData.Mod, entity, player, flag)
 				end
@@ -372,127 +371,127 @@ function mod.ClearTearFlags(entity, flags, force)
 	end)
 end
 
-function mod.WipeTearFlags(entity, force)
-	mod.ClearTearFlags(entity, mod.GetTearFlags(entity), force)
+function TearFlagsLib.WipeTearFlags(entity, force)
+	TearFlagsLib.ClearTearFlags(entity, TearFlagsLib.GetTearFlags(entity), force)
 end
 
-function mod.SetTearFlagParams(entity, flag, newParams, override)
+function TearFlagsLib.SetTearFlagParams(entity, flag, newParams, override)
 	if flag then
-		local params = getValidatedCustomParams(mod.GetSafeData(entity), tostring(flag:GetFirstIndex()))
+		local params = getValidatedCustomParams(TearFlagsLib.GetSafeData(entity), tostring(flag:GetFirstIndex()))
 		if override then
 			params = newParams
 		else
-			mod.FuzzyReplaceTable(params, newParams)
+			TearFlagsLib.FuzzyReplaceTable(params, newParams)
 		end
 	else
 		if override then
-			mod.GetSafeData(entity).customParams = newParams
+			TearFlagsLib.GetSafeData(entity).customParams = newParams
 		else
-			mod.FuzzyReplaceTable(mod.GetSafeData(entity).customParams, newParams)
+			TearFlagsLib.FuzzyReplaceTable(TearFlagsLib.GetSafeData(entity).customParams, newParams)
 		end
 	end
 end
 
-function mod.GetTearFlagParams(entity, flag)
+function TearFlagsLib.GetTearFlagParams(entity, flag)
 	if flag then
-		return mod.CopyTable(getValidatedCustomParams(mod.GetSafeData(entity), tostring(flag:GetFirstIndex())))
+		return TearFlagsLib.CopyTable(getValidatedCustomParams(TearFlagsLib.GetSafeData(entity), tostring(flag:GetFirstIndex())))
 	else
-		return mod.CopyTable(mod.GetSafeData(entity).customParams)
+		return TearFlagsLib.CopyTable(TearFlagsLib.GetSafeData(entity).customParams)
 	end
 end
 
-function mod.ClearTearFlagParams(entity, flag)
-	mod.GetSafeData(entity).customParams[tostring(flag:GetFirstIndex())] = {}
+function TearFlagsLib.ClearTearFlagParams(entity, flag)
+	TearFlagsLib.GetSafeData(entity).customParams[tostring(flag:GetFirstIndex())] = {}
 end
 
-function mod.AddCustomVanillaTearFlags(entity, flags)
-	local data = mod.GetSafeData(entity)
+function TearFlagsLib.AddCustomVanillaTearFlags(entity, flags)
+	local data = TearFlagsLib.GetSafeData(entity)
 	data.vanillaFlags = data.vanillaFlags | flags
 end
 
-function mod.GetCustomVanillaTearFlags(entity)
-	return mod.GetSafeData(entity).vanillaFlags
+function TearFlagsLib.GetCustomVanillaTearFlags(entity)
+	return TearFlagsLib.GetSafeData(entity).vanillaFlags
 end
 
-function mod.HasCustomVanillaTearFlags(entity, flags)
-	local data = mod.GetSafeData(entity)
+function TearFlagsLib.HasCustomVanillaTearFlags(entity, flags)
+	local data = TearFlagsLib.GetSafeData(entity)
 	return data.vanillaFlags & flags == flags
 end
 
-function mod.HasAnyCustomVanillaTearFlags(entity)
-	local data = mod.GetSafeData(entity)
-	return data.vanillaFlags ~= mod.BitSetZero
+function TearFlagsLib.HasAnyCustomVanillaTearFlags(entity)
+	local data = TearFlagsLib.GetSafeData(entity)
+	return data.vanillaFlags ~= TearFlagsLib.BitSetZero
 end
 
-function mod.ClearCustomVanillaTearFlags(entity, flags)
-	local data = mod.GetSafeData(entity)
+function TearFlagsLib.ClearCustomVanillaTearFlags(entity, flags)
+	local data = TearFlagsLib.GetSafeData(entity)
 	data.vanillaFlags = data.vanillaFlags &~ flags
 end
 
-function mod.WipeCustomVanillaTearFlags(entity)
-	mod.GetSafeData(entity).vanillaFlags = mod.BitSetZero
+function TearFlagsLib.WipeCustomVanillaTearFlags(entity)
+	TearFlagsLib.GetSafeData(entity).vanillaFlags = TearFlagsLib.BitSetZero
 end
 
-function mod.SetCustomVanillaTearFlagParams(entity, newParams, override)
+function TearFlagsLib.SetCustomVanillaTearFlagParams(entity, newParams, override)
 	if override then
-		mod.GetSafeData(entity).vanillaParams = newParams
+		TearFlagsLib.GetSafeData(entity).vanillaParams = newParams
 	else
-		mod.FuzzyReplaceTable(mod.GetSafeData(entity).vanillaParams, newParams)
+		TearFlagsLib.FuzzyReplaceTable(TearFlagsLib.GetSafeData(entity).vanillaParams, newParams)
 	end
 end
 
-function mod.GetCustomVanillaTearFlagParams(entity)
-	return mod.CopyTable(mod.GetSafeData(entity).vanillaParams)
+function TearFlagsLib.GetCustomVanillaTearFlagParams(entity)
+	return TearFlagsLib.CopyTable(TearFlagsLib.GetSafeData(entity).vanillaParams)
 end
 
-function mod.FuzzyGetVanillaTearFlags(entity)
-	return (mod.Cast(entity).TearFlags or TearFlags.TEAR_NORMAL) | mod.GetCustomVanillaTearFlags(entity)
+function TearFlagsLib.FuzzyGetVanillaTearFlags(entity)
+	return (TearFlagsLib.Cast(entity).TearFlags or TearFlags.TEAR_NORMAL) | TearFlagsLib.GetCustomVanillaTearFlags(entity)
 end
 
-function mod.CopyTearFlags(recipient, donor, weaponFlag, params) -- weaponFlag is technically optional, but you should always provide one if you can (the weaponFlag of the recipient)
+function TearFlagsLib.CopyTearFlags(recipient, donor, weaponFlag, params) -- weaponFlag is technically optional, but you should always provide one if you can (the weaponFlag of the recipient)
 	params = params or {}
 
 	if params.wipe then
-		mod.WipeTearFlags(recipient)
-		mod.WipeCustomVanillaTearFlags(recipient)
+		TearFlagsLib.WipeTearFlags(recipient)
+		TearFlagsLib.WipeCustomVanillaTearFlags(recipient)
 	end
 
-	mod.AddTearFlags(recipient, mod.GetTearFlags(donor))
-	mod.SetTearFlagParams(recipient, nil, mod.GetTearFlagParams(donor), true)
-	mod.TryCopyBlacklist(recipient, donor)
+	TearFlagsLib.AddTearFlags(recipient, TearFlagsLib.GetTearFlags(donor))
+	TearFlagsLib.SetTearFlagParams(recipient, nil, TearFlagsLib.GetTearFlagParams(donor), true)
+	TearFlagsLib.TryCopyBlacklist(recipient, donor)
 
 	if not params.skipVanilla then
-		mod.AddCustomVanillaTearFlags(recipient, mod.FuzzyGetVanillaTearFlags(donor))
-		mod.SetCustomVanillaTearFlagParams(recipient, mod.GetCustomVanillaTearFlagParams(donor), true)
+		TearFlagsLib.AddCustomVanillaTearFlags(recipient, TearFlagsLib.FuzzyGetVanillaTearFlags(donor))
+		TearFlagsLib.SetCustomVanillaTearFlagParams(recipient, TearFlagsLib.GetCustomVanillaTearFlagParams(donor), true)
 	end
 
-	for _, callbackData in pairs(Isaac.GetCallbacks(mod.Callback.POST_COPY_TEARFLAGS)) do
-		if not callbackData.Param or mod.HasTearFlags(recipient, callbackData.Param) then
+	for _, callbackData in pairs(Isaac.GetCallbacks(TearFlagsLib.Callback.POST_COPY_TEARFLAGS)) do
+		if not callbackData.Param or TearFlagsLib.HasTearFlags(recipient, callbackData.Param) then
 			callbackData.Function(callbackData.Mod, recipient, donor, weaponFlag)
 		end
 	end
 end
 
-function mod.TryCopyBlacklist(recipient, donor)
-	local donorData = mod.GetSafeData(donor)
-	local data = mod.GetSafeData(recipient)
+function TearFlagsLib.TryCopyBlacklist(recipient, donor)
+	local donorData = TearFlagsLib.GetSafeData(donor)
+	local data = TearFlagsLib.GetSafeData(recipient)
 
-	mod.GetTearFlags(recipient):ForEach(function(flag)
+	TearFlagsLib.GetTearFlags(recipient):ForEach(function(flag)
 		local id = tostring(flag:GetFirstIndex())
 		if donorData.copyBlacklist[id] then
-			data.entityBlacklist[id] = mod.CopyTable(donorData.entityBlacklist[id])
-			data.copyBlacklist[id] = mod.CopyTable(donorData.copyBlacklist[id])
+			data.entityBlacklist[id] = TearFlagsLib.CopyTable(donorData.entityBlacklist[id])
+			data.copyBlacklist[id] = TearFlagsLib.CopyTable(donorData.copyBlacklist[id])
 		end
 	end)
 
 	if donorData.copyBlacklist.General then
-		data.entityBlacklist.General = mod.CopyTable(donorData.entityBlacklist.General)
-		data.copyBlacklist.General = mod.CopyTable(donorData.copyBlacklist.General)
+		data.entityBlacklist.General = TearFlagsLib.CopyTable(donorData.entityBlacklist.General)
+		data.copyBlacklist.General = TearFlagsLib.CopyTable(donorData.copyBlacklist.General)
 	end
 end
 
 -- Literally just a wrapper for EntityPlayer.GetTearHitParams to grab the only 2 things you probably care about
-function mod.PollVanillaTearFlags(player, weaponEntity, weaponTypeOverride, damageScaleOverride, tearDisplacementOverride)
+function TearFlagsLib.PollVanillaTearFlags(player, weaponEntity, weaponTypeOverride, damageScaleOverride, tearDisplacementOverride)
 	local params = player:GetTearHitParams(weaponTypeOverride or WeaponType.WEAPON_TEARS, damageScaleOverride, tearDisplacementOverride, weaponEntity or player)
 	return params.TearFlags, params.TearDamage
 end
@@ -508,34 +507,34 @@ end
 	-- Color:	ColorOverride		(For modifying the colour of tear-spawns like Explosions)
 	-- boolean:	RemoveStickyTears	(For automatically removing all sticky-type tears if your Weapon has custom behaviour)
 	-- boolean: RemoveSplashDamage  (For automatically removing )
-function mod.ApplyVanillaTearFlagEffectsToEntity(entity, flags, player, flagsSource, params)
+function TearFlagsLib.ApplyVanillaTearFlagEffectsToEntity(entity, flags, player, flagsSource, params)
 	flags = flags or BitSet128(0, 0)
 	player = player or Isaac.GetPlayer()
 	params = params or {}
 
 	local position = params.PositionOverride or (flagsSource and flagsSource.Position) or (entity.Position + (player.Position - entity.Position):Resized(entity.Size + 7))
 	local velocity = params.VelocityOverride or (flagsSource and flagsSource.Velocity) or (entity.Position - player.Position)
-	if params.RemoveStickyTears then flags = flags &~ mod.STICKY_TEAR_FLAGS end
+	if params.RemoveStickyTears then flags = flags &~ TearFlagsLib.STICKY_TEAR_FLAGS end
 
-	local recursionKey = mod.SetAntiRecursion()
-	mod.CancelDamage = true
+	local recursionKey = TearFlagsLib.SetAntiRecursion()
+	TearFlagsLib.CancelDamage = true
 	local tear = Isaac.Spawn(2, 0, 0, position, velocity, player):ToTear()
 	tear.CollisionDamage = params.DamageOverride or player.Damage
 	tear.Scale = params.ScaleOverride or tear.Scale
 	tear.Color = params.ColorOverride or tear.Color
-	tear:AddTearFlags(flags &~ (mod.SPLITSHOT_TEAR_FLAGS | mod.PIERCING_TEARFLAGS))
+	tear:AddTearFlags(flags &~ (TearFlagsLib.SPLITSHOT_TEAR_FLAGS | TearFlagsLib.PIERCING_TEARFLAGS))
 	tear:AddEntityFlags(EntityFlag.FLAG_NO_QUERY)
 	tear:ForceCollide(entity, true)
-	mod.CancelDamage = false
-	mod.ClearAntiRecursion(recursionKey)
+	TearFlagsLib.CancelDamage = false
+	TearFlagsLib.ClearAntiRecursion(recursionKey)
 
-	if flags & mod.STICKY_TEAR_FLAGS ~= TearFlags.TEAR_NORMAL then -- Has Sinus/Explosivo/Mucormycosis
-		mod.CostumeStickyTear(tear)
+	if flags & TearFlagsLib.STICKY_TEAR_FLAGS ~= TearFlags.TEAR_NORMAL then -- Has Sinus/Explosivo/Mucormycosis
+		TearFlagsLib.CostumeStickyTear(tear)
 		tear.StickDiff = tear.StickDiff:Resized(entity.Size + tear.Size)
 		return
 	end
 
-	if flags & mod.NO_REMOVE_TEAR_FLAGS ~= TearFlags.TEAR_NORMAL then -- Has Ipecac/Mysterious Liquid
+	if flags & TearFlagsLib.NO_REMOVE_TEAR_FLAGS ~= TearFlags.TEAR_NORMAL then -- Has Ipecac/Mysterious Liquid
 		tear.Visible = false
 		if flags & TearFlags.TEAR_EXPLOSIVE == TearFlags.TEAR_EXPLOSIVE then
 			if flags & TearFlags.TEAR_BURN then
@@ -556,52 +555,52 @@ end
 
 -- Generally this shouldn't be used for custom weapons, this is for arbitrarily applying the effects of flags
 -- See the beginning of the callbacks.lua for how to properly interact with our custom flags
-function mod.ApplyCustomTearFlagEffectsToEntity(entity, flags, player, flagsSource, weaponFlag)
-	for _, callbackData in pairs(Isaac.GetCallbacks(mod.Callback.APPLY_TEARFLAG_EFFECT)) do
-		if flags & callbackData.Param ~= mod.BitSetInfinity.Zero then
+function TearFlagsLib.ApplyCustomTearFlagEffectsToEntity(entity, flags, player, flagsSource, weaponFlag)
+	for _, callbackData in pairs(Isaac.GetCallbacks(TearFlagsLib.Callback.APPLY_TEARFLAG_EFFECT)) do
+		if flags & callbackData.Param ~= TearFlagsLib.BitSetInfinity.Zero then
 			callbackData.Function(callbackData.Mod, entity, player, flagsSource, weaponFlag)
 		end
 	end
 end
 
-function mod.BlacklistEntity(entity, source, flag) -- Blacklists Entity from recieving the effects of a given Flag from Source. Source should be your WeaponEntity.
-	local blacklist = mod.GetSafeData(source).entityBlacklist
+function TearFlagsLib.BlacklistEntity(entity, source, flag) -- Blacklists Entity from recieving the effects of a given Flag from Source. Source should be your WeaponEntity.
+	local blacklist = TearFlagsLib.GetSafeData(source).entityBlacklist
 	local node = flag and tostring(flag:GetFirstIndex()) or "General"
 	blacklist[node] = blacklist[node] or {}
 	blacklist[node][tostring(entity.InitSeed)] = true
 end
 
-function mod.TemporarilyBlacklistEntity(entity, source, flag, duration) -- This is its own function primarily just to reduce confusion.
-	local blacklist = mod.GetSafeData(source).entityBlacklist
+function TearFlagsLib.TemporarilyBlacklistEntity(entity, source, flag, duration) -- This is its own function primarily just to reduce confusion.
+	local blacklist = TearFlagsLib.GetSafeData(source).entityBlacklist
 	local node = flag and tostring(flag:GetFirstIndex()) or "General"
 	blacklist[node] = blacklist[node] or {}
 	blacklist[node][tostring(entity.InitSeed)] = Game():GetFrameCount() + duration
 end
 
-function mod.WhitelistEntity(entity, source, flag)
-	local blacklist = mod.GetSafeData(source).entityBlacklist
+function TearFlagsLib.WhitelistEntity(entity, source, flag)
+	local blacklist = TearFlagsLib.GetSafeData(source).entityBlacklist
 	local node = flag and tostring(flag:GetFirstIndex()) or "General"
 	blacklist[node] = blacklist[node] or {}
 	blacklist[node][tostring(entity.InitSeed)] = false
 end
 
-function mod.ClearBlacklist(source, flag)
-	local blacklist = mod.GetSafeData(source).entityBlacklist
+function TearFlagsLib.ClearBlacklist(source, flag)
+	local blacklist = TearFlagsLib.GetSafeData(source).entityBlacklist
 	local node = flag and tostring(flag:GetFirstIndex()) or "General"
 	blacklist[node] = {}
 end
 
-function mod.WipeBlacklists(source)
-	mod.GetSafeData(source).entityBlacklist = {General = {}}
+function TearFlagsLib.WipeBlacklists(source)
+	TearFlagsLib.GetSafeData(source).entityBlacklist = {General = {}}
 end
 
-function mod.IsEntityBlacklisted(entity, source, flag)
+function TearFlagsLib.IsEntityBlacklisted(entity, source, flag)
 	local node = flag and tostring(flag:GetFirstIndex()) or "General"
-	local blacklisted = (mod.GetSafeData(source).entityBlacklist[node] or {})[tostring(entity.InitSeed)]
+	local blacklisted = (TearFlagsLib.GetSafeData(source).entityBlacklist[node] or {})[tostring(entity.InitSeed)]
 	
 	if type(blacklisted) == "number" then
 		if blacklisted < Game():GetFrameCount() then
-			mod.WhitelistEntity(entity, source, flag)
+			TearFlagsLib.WhitelistEntity(entity, source, flag)
 			return false
 		else
 			return true
@@ -611,9 +610,9 @@ function mod.IsEntityBlacklisted(entity, source, flag)
 	end
 end
 
-function mod.SetCopyBlacklist(source, bool, flag) -- Tells the passed Source whether its blacklist should be passed onto any entity that copies its TearFlags
+function TearFlagsLib.SetCopyBlacklist(source, bool, flag) -- Tells the passed Source whether its blacklist should be passed onto any entity that copies its TearFlags
 	local node = flag and tostring(flag:GetFirstIndex()) or "General"
-	mod.GetSafeData().copyBlacklist[node] = bool
+	TearFlagsLib.GetSafeData().copyBlacklist[node] = bool
 end
 
 -- Params is an optional table that can contain the following information:
@@ -630,8 +629,8 @@ end
 	-- boolean: SkipRemoveOnSplitFlags	(Some TearFlags are removed automatically (Tractor Beam), pass as `true` to allow these flags to stay)
 	-- boolean: CanTriggerStreakEnd		(For Dead Eye, defaults to false)
 	-- string:	SplitTearType 			(Passed through to MC_POST_FIRE_SPLIT_TEAR in the SplitTearType argument)
-function mod.FireSplitTear(spawner, velocity, player, params)
-	spawner = mod.Cast(spawner)
+function TearFlagsLib.FireSplitTear(spawner, velocity, player, params)
+	spawner = TearFlagsLib.Cast(spawner)
 	params = params or {}
 
 	local variant = 0
@@ -648,11 +647,11 @@ function mod.FireSplitTear(spawner, velocity, player, params)
 	if spawner.TearFlags or spawner.Flags then tear.TearFlags = (spawner.TearFlags or spawner.Flags) end
 
 	if params.ScaleOverride then
-		mod.SetTearScale(tear, params.ScaleOverride)
+		TearFlagsLib.SetTearScale(tear, params.ScaleOverride)
 	elseif spawner.Scale then
-		mod.SetTearScale(tear, spawner.Scale * (params.ScaleMult or 0.5))
+		TearFlagsLib.SetTearScale(tear, spawner.Scale * (params.ScaleMult or 0.5))
 	else
-		mod.SetTearScale(tear, tear.Scale * (params.ScaleMult or 0.5))
+		TearFlagsLib.SetTearScale(tear, tear.Scale * (params.ScaleMult or 0.5))
 	end
 
 	tear.Color = params.ColorOverride or spawner.Color
@@ -660,20 +659,20 @@ function mod.FireSplitTear(spawner, velocity, player, params)
 	tear.CanTriggerStreakEnd = params.CanTriggerStreakEnd or false
 	Isaac.RunCallbackWithParam(ModCallbacks.MC_POST_FIRE_SPLIT_TEAR, params.SplitTearType or "TearFlagsLibGeneric", tear, spawner, params.SplitTearType or "TearFlagsLibGeneric")
 
-	tear.TearFlags = tear.TearFlags | mod.GetCustomVanillaTearFlags(tear)
+	tear.TearFlags = tear.TearFlags | TearFlagsLib.GetCustomVanillaTearFlags(tear)
 
 	if not params.SkipRemoveOnSplitFlags then
-		tear.TearFlags = tear.TearFlags &~ mod.REMOVE_ON_SPLITSHOT_FLAGS
+		tear.TearFlags = tear.TearFlags &~ TearFlagsLib.REMOVE_ON_SPLITSHOT_FLAGS
 	end
 
-	mod.WipeCustomVanillaTearFlags(tear)
+	TearFlagsLib.WipeCustomVanillaTearFlags(tear)
 
 	if params.RemoveFlags then
 		tear.TearFlags = tear.TearFlags &~ params.RemoveFlags
 	end
 
 	if params.RemoveCustomFlags then
-		mod.ClearTearFlags(tear, params.RemoveCustomFlags)
+		TearFlagsLib.ClearTearFlags(tear, params.RemoveCustomFlags)
 	end
 
 	return tear
@@ -683,13 +682,13 @@ end
 	-- number:		NumTears		(Defaults to 14)
 	-- boolean:		NoBurstSfx		(Defaults to false)
 	-- boolean:		IgnoreShotSpeed (Defaults to false)
-function mod.FireSplitTearMonstroBurst(spawner, velocity, player, rng, params)
+function TearFlagsLib.FireSplitTearMonstroBurst(spawner, velocity, player, rng, params)
     local tears = {}
     params = params or {}
     rng = rng or player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_MONSTROS_LUNG)
 
-    for _, tearInfo in ipairs(mod.GetPlayerMonstroBurstInfo(player, params.PositionOverride or spawner.Position, velocity, params.NumTears, rng, params.IgnoreShotSpeed)) do
-        local tear = mod.FireSplitTear(spawner, tearInfo.Vel, player, mod.FuzzyReplaceTable(params, {
+    for _, tearInfo in ipairs(TearFlagsLib.GetPlayerMonstroBurstInfo(player, params.PositionOverride or spawner.Position, velocity, params.NumTears, rng, params.IgnoreShotSpeed)) do
+        local tear = TearFlagsLib.FireSplitTear(spawner, tearInfo.Vel, player, TearFlagsLib.FuzzyReplaceTable(params, {
         	PositionOverride = tearInfo.Pos,
         	ScaleMult = tearInfo.ScaleMult,
         }))
@@ -719,8 +718,8 @@ end
 	-- number:	ScaleOverride 			(Scale is hard set to this value if provided, ignoring ScaleMult)
 	-- number:	BombVariant 			(If spawner is an EntityBomb, defaults to spawner.Variant, otherwise defaults to player:GetTearHitParams(...).BombVariant)
 	-- boolean: SkipRemoveOnSplitFlags	(Some TearFlags are removed automatically (Tractor Beam), pass as `true` to allow these flags to stay)
-function mod.FireSplitBomb(spawner, velocity, player, params)
-	spawner = mod.Cast(spawner)
+function TearFlagsLib.FireSplitBomb(spawner, velocity, player, params)
+	spawner = TearFlagsLib.Cast(spawner)
 	params = params or {}
 
 	local variant = 0
@@ -742,22 +741,22 @@ function mod.FireSplitBomb(spawner, velocity, player, params)
 	bomb.Flags = spawner.Flags or spawner.TearFlags or bomb.Flags
 	-- This is where I would call MC_POST_FIRE_SPLIT_BOMB if it existed
 	
-	mod.CopyTearFlags(bomb, spawner, mod.WeaponFlag.DR_FETUS, {wipe = true})
-	bomb:AddTearFlags(mod.GetCustomVanillaTearFlags(bomb))
+	TearFlagsLib.CopyTearFlags(bomb, spawner, TearFlagsLib.WeaponFlag.DR_FETUS, {wipe = true})
+	bomb:AddTearFlags(TearFlagsLib.GetCustomVanillaTearFlags(bomb))
 
 
 	if not params.SkipRemoveOnSplitFlags then
-		bomb:ClearTearFlags(mod.REMOVE_ON_SPLITSHOT_FLAGS)
+		bomb:ClearTearFlags(TearFlagsLib.REMOVE_ON_SPLITSHOT_FLAGS)
 	end
 
-	mod.WipeCustomVanillaTearFlags(bomb)
+	TearFlagsLib.WipeCustomVanillaTearFlags(bomb)
 
 	if params.RemoveFlags then
 		bomb:ClearTearFlags(params.RemoveFlags)
 	end
 
 	if params.RemoveCustomFlags then
-		mod.ClearTearFlags(bomb, params.RemoveCustomFlags)
+		TearFlagsLib.ClearTearFlags(bomb, params.RemoveCustomFlags)
 	end
 
 	bomb:SetLoadCostumes(true)
@@ -766,13 +765,13 @@ end
 
 -- Params is an optional table that can contain every TearFlagsLib.FireSplitBomb param, as well as:
 	-- number: NumBombs	(Defaults to 5)
-function mod.FireSplitBombMonstroBurst(spawner, velocity, player, rng, params)
+function TearFlagsLib.FireSplitBombMonstroBurst(spawner, velocity, player, rng, params)
 	local bombs = {}
 	params = params or {}
 	rng = rng or player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_MONSTROS_LUNG)
 
-    for _, bombInfo in ipairs(mod.GetMonstroBombBurstInfo(params.PositionOverride or spawner.Position, velocity, params.NumBombs, rng)) do
-        local bomb = mod.FireSplitBomb(spawner, bombInfo.Vel, player, mod.FuzzyReplaceTable(params, {
+    for _, bombInfo in ipairs(TearFlagsLib.GetMonstroBombBurstInfo(params.PositionOverride or spawner.Position, velocity, params.NumBombs, rng)) do
+        local bomb = TearFlagsLib.FireSplitBomb(spawner, bombInfo.Vel, player, TearFlagsLib.FuzzyReplaceTable(params, {
         	PositionOverride = bombInfo.Pos,
         }))
         bomb:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK)
@@ -803,8 +802,8 @@ end
 	-- number:	MaxDistance
 	-- number:	NumChainedLasers
 	-- number:	InitSound 				(Overrides the default laser init sound)
-function mod.FireSplitLaser(spawner, direction, player, params)
-	spawner = mod.Cast(spawner)
+function TearFlagsLib.FireSplitLaser(spawner, direction, player, params)
+	spawner = TearFlagsLib.Cast(spawner)
 	params = params or {}
 
 	TearFlagsLib.FiringSplitLaser = {
@@ -814,7 +813,7 @@ function mod.FireSplitLaser(spawner, direction, player, params)
 	}
 
 	local variant = params.LaserVariant or (spawner.Type == EntityType.ENTITY_LASER and spawner.Variant) or LaserVariant.THIN_RED
-	if mod.IsLaserVariantBrimstone(variant) then
+	if TearFlagsLib.IsLaserVariantBrimstone(variant) then
 		variant = LaserVariant.THIN_RED
 	end
 
@@ -849,14 +848,14 @@ end
 -- Params is an optional table that can contain every TearFlagsLib.FireSplitLaser param, as well as:
 	-- number:	NumLasers 	(Defaults to 6)
 	-- boolean:	NoBurstSfx 	(Defaults to false)
-function mod.FireSplitLaserMonstroBurst(spawner, direction, player, rng, params)
+function TearFlagsLib.FireSplitLaserMonstroBurst(spawner, direction, player, rng, params)
 	local playBurstSfx = params.PlayMonstroBurstSfx
     posOffset = posOffset or Vector(0, -20)
 
     local lasers = {}
 
-    for _, laserInfo in ipairs(mod.GetMonstroLaserBurstInfo(params.PositionOverride or spawner.Position, direction, params.NumLasers)) do
-        local laser = mod.FireSplitLaser(spawner, laserInfo.Dir, player, mod.FuzzyReplaceTable(params, {
+    for _, laserInfo in ipairs(TearFlagsLib.GetMonstroLaserBurstInfo(params.PositionOverride or spawner.Position, direction, params.NumLasers)) do
+        local laser = TearFlagsLib.FireSplitLaser(spawner, laserInfo.Dir, player, TearFlagsLib.FuzzyReplaceTable(params, {
         	PositionOverride = laserInfo.Pos,
         	ScaleMult = laserInfo.ScaleMult,
         	MaxDistance = laserInfo.ChainSegmentDistance,
@@ -876,56 +875,56 @@ function mod.FireSplitLaserMonstroBurst(spawner, direction, player, rng, params)
 end
 
 -- :(
-function mod.EstimateWeaponFlagFromEntity(entity)
-	local data = mod.GetSafeData(entity)
+function TearFlagsLib.EstimateWeaponFlagFromEntity(entity)
+	local data = TearFlagsLib.GetSafeData(entity)
 
-	for weapon, func in pairs(mod.WeaponIdentityFunctions) do
+	for weapon, func in pairs(TearFlagsLib.WeaponIdentityFunctions) do
 		if func(entity) then return weapon end
 	end 
 
 	if entity.Type == 2 then
 		if data.isBobsHead then
-			return mod.WeaponFlag.BOBS_ROTTEN_HEAD
+			return TearFlagsLib.WeaponFlag.BOBS_ROTTEN_HEAD
 		elseif data.isSharpKey then
-			return mod.WeaponFlag.SHARP_KEY
+			return TearFlagsLib.WeaponFlag.SHARP_KEY
 		else
-			return mod.WeaponFlag.TEAR
+			return TearFlagsLib.WeaponFlag.TEAR
 		end
 	elseif entity.Type == 3 then
 		if entity.Variant == FamiliarVariant.ABYSS_LOCUST then
-			return mod.WeaponFlag.LOCUST
+			return TearFlagsLib.WeaponFlag.LOCUST
 		elseif entity.Variant == FamiliarVariant.UMBILICAL_BABY then
-			return mod.WeaponFlag.UMBILICAL_WHIP
+			return TearFlagsLib.WeaponFlag.UMBILICAL_WHIP
 		end
 	elseif entity.Type == 4 then
-		return mod.WeaponFlag.DR_FETUS
+		return TearFlagsLib.WeaponFlag.DR_FETUS
 	elseif entity.Type == 7 then
-		return mod.WeaponFlag.LASER
+		return TearFlagsLib.WeaponFlag.LASER
 	elseif entity.Type == 8 then
-		if mod.IsKnifeVariantTrueKnife(entity.Variant) then
-			return mod.WeaponFlag.KNIFE
-		elseif mod.IsKnifeVariantClub(entity.Variant) then
-			return mod.WeaponFlag.CLUB
-		elseif mod.IsKnifeVariantSword(entity.Variant) then
-			return mod.WeaponFlag.SWORD
+		if TearFlagsLib.IsKnifeVariantTrueKnife(entity.Variant) then
+			return TearFlagsLib.WeaponFlag.KNIFE
+		elseif TearFlagsLib.IsKnifeVariantClub(entity.Variant) then
+			return TearFlagsLib.WeaponFlag.CLUB
+		elseif TearFlagsLib.IsKnifeVariantSword(entity.Variant) then
+			return TearFlagsLib.WeaponFlag.SWORD
 		end
 	elseif entity.Type == 1000 then
 		if entity.Variant == EffectVariant.PLAYER_CREEP_HOLYWATER_TRAIL then
-			return mod.WeaponFlag.AQUARIUS
+			return TearFlagsLib.WeaponFlag.AQUARIUS
 		elseif entity.Variant == EffectVariant.ROCKET then
-			return mod.WeaponFlag.EPIC_FETUS
+			return TearFlagsLib.WeaponFlag.EPIC_FETUS
 		elseif entity.Variant == EffectVariant.SMALL_ROCKET then
-			return mod.WeaponFlag.CLUB_EPIC_FETUS
+			return TearFlagsLib.WeaponFlag.CLUB_EPIC_FETUS
 		elseif entity.Variant == EffectVariant.BRIMSTONE_SWIRL or entity.Variant == EffectVariant.TECH_DOT then
-			return mod.WeaponFlag.ANTI_GRAV_LASER
+			return TearFlagsLib.WeaponFlag.ANTI_GRAV_LASER
 		elseif entity.Variant == EffectVariant.BRIMSTONE_BALL then
-			return mod.WeaponFlag.BRIMSTONE_BALL
+			return TearFlagsLib.WeaponFlag.BRIMSTONE_BALL
 		elseif entity.Variant == EffectVariant.DARK_SNARE then
-			return mod.WeaponFlag.DARK_ARTS
+			return TearFlagsLib.WeaponFlag.DARK_ARTS
 		elseif entity.Variant == EffectVariant.RIFT then
-			return mod.WeaponFlag.OCULAR_RIFT
-		elseif data.dummyWeaponIdentity == mod.WeaponFlag.HEMOPTYSIS then
-			return mod.WeaponFlag.HEMOPTYSIS
+			return TearFlagsLib.WeaponFlag.OCULAR_RIFT
+		elseif data.dummyWeaponIdentity == TearFlagsLib.WeaponFlag.HEMOPTYSIS then
+			return TearFlagsLib.WeaponFlag.HEMOPTYSIS
 		end
 	end
 
@@ -940,14 +939,14 @@ end
 	-- Entity:		DamageSource				(Overrides the entity passed through Entity:TakeDamage as the Source)
 	-- Number:		DamageCooldown				(Passed to the DamageCooldown argument of Entity:TakeDamage, defaults to 0)
 	-- boolean:		IgnoreVanillaDamageFlags 	(Skips adding the extra damage flags from vanilla)
-function mod.DamageEntity(entity, amount, damageFlags, weaponEntity, params)
+function TearFlagsLib.DamageEntity(entity, amount, damageFlags, weaponEntity, params)
 	local damageMult = 1
 	local damageAdd = 0
 	local damageFlat = 0
 	params = params or {}
 
-	mod.GetTearFlags(weaponEntity):ForEach(function(flag)
-		local flagParams = mod.GetTearFlagParams(weaponEntity, flag)
+	TearFlagsLib.GetTearFlags(weaponEntity):ForEach(function(flag)
+		local flagParams = TearFlagsLib.GetTearFlagParams(weaponEntity, flag)
 		if flagParams.DamageParams then
 			damageFlags = damageFlags | (flagParams.DamageParams.DamageFlags or 0)
 			damageMult = damageMult * (flagParams.DamageParams.DamageMult or 1)
@@ -956,25 +955,25 @@ function mod.DamageEntity(entity, amount, damageFlags, weaponEntity, params)
 		end
 	end)
 
-	if not params.IgnoreVanillaDamageFlags then damageFlags = damageFlags | mod.GetVanillaTearFlagDamageFlags(weaponEntity) end
+	if not params.IgnoreVanillaDamageFlags then damageFlags = damageFlags | TearFlagsLib.GetVanillaTearFlagDamageFlags(weaponEntity) end
 	amount = (amount + damageAdd) * damageMult + damageFlat
 	entity:TakeDamage(amount, damageFlags, EntityRef(params.DamageSource or weaponEntity), params.DamageCooldown or 0)
 end
 
-function mod.AddEntityToUpdateList(entity, listKey)
-	mod.UpdateLists[listKey] = mod.UpdateLists[listKey] or {}
-	table.insert(mod.UpdateLists[listKey], entity)
+function TearFlagsLib.AddEntityToUpdateList(entity, listKey)
+	TearFlagsLib.UpdateLists[listKey] = TearFlagsLib.UpdateLists[listKey] or {}
+	table.insert(TearFlagsLib.UpdateLists[listKey], entity)
 end
 
-function mod.RemoveEntityFromUpdateList(entity, listKey)
-	mod.RemoveUserDataValueFromTable(entity, mod.EntityLists[listKey] or {})
+function TearFlagsLib.RemoveEntityFromUpdateList(entity, listKey)
+	TearFlagsLib.RemoveUserDataValueFromTable(entity, TearFlagsLib.EntityLists[listKey] or {})
 end
 
-function mod.SetTearCanHitMultipleTimes(tear, canHit, frequency) -- Ludovico Technique tears are allowed to damage the same entity multiple times. This allows you to set a frequency by which any tear can do the same, managed by TearFlagsLib
+function TearFlagsLib.SetTearCanHitMultipleTimes(tear, canHit, frequency) -- Ludovico Technique tears are allowed to damage the same entity multiple times. This allows you to set a frequency by which any tear can do the same, managed by TearFlagsLib
 	if not tear:ToTear() then return end -- This one really DOES have to be a tear
 	if canHit == nil then canHit = true end
 
-	mod.GetSafeData(tear).pseudoLudo = {
+	TearFlagsLib.GetSafeData(tear).pseudoLudo = {
 		canReset = canHit,
 		frequency = frequency, -- Frequency defaults to player fire rate if not set
 	}
@@ -982,25 +981,25 @@ end
 
 -- Only Isaac gets the benefits of Teardrop Charm. Familiars like Incubus and Twisted Pair do not
 -- The entity which is polling for TearFlags therefore must be passed in order to determine when not to include this bonus
-function mod.GetRealLuck(player, testEntity)
-	mod.LuckCache = 0
+function TearFlagsLib.GetRealLuck(player, testEntity)
+	TearFlagsLib.LuckCache = 0
 	player:AddCacheFlags(CacheFlag.CACHE_LUCK)
 	player:EvaluateItems()
 
-	if testEntity and mod.WasEntityFiredByPlayerMimic(testEntity, true) then
-		return mod.LuckCache -- This is a familiar attack, do not apply Teardrop Charm bonuses
+	if testEntity and TearFlagsLib.WasEntityFiredByPlayerMimic(testEntity, true) then
+		return TearFlagsLib.LuckCache -- This is a familiar attack, do not apply Teardrop Charm bonuses
 	end
 
 	if player:HasTrinket(TrinketType.TRINKET_TEARDROP_CHARM) then
-		mod.LuckCache = mod.LuckCache + 2
-		mod.LuckCache = mod.LuckCache + 2 * player:GetTrinketMultiplier(TrinketType.TRINKET_TEARDROP_CHARM)
+		TearFlagsLib.LuckCache = TearFlagsLib.LuckCache + 2
+		TearFlagsLib.LuckCache = TearFlagsLib.LuckCache + 2 * player:GetTrinketMultiplier(TrinketType.TRINKET_TEARDROP_CHARM)
 	end
 
-	return mod.LuckCache
+	return TearFlagsLib.LuckCache
 end
 
 -- Linearly scales chance from baseChance -> maxChance as rawLuck scales from 0 -> luckRequirement
-function mod.GetChance(rawLuck, baseChance, maxChance, luckRequirement, itemScalerN)
+function TearFlagsLib.GetChance(rawLuck, baseChance, maxChance, luckRequirement, itemScalerN)
 	local range = maxChance - baseChance
 	local luck = math.max(math.min(rawLuck, luckRequirement), 0)
 	local chance = baseChance + range * (luck / luckRequirement)
@@ -1023,14 +1022,14 @@ end
 	end
 ]]
 
-function mod.DumpFlags()
-	for key, flag in pairs(mod.Flag) do
+function TearFlagsLib.DumpFlags()
+	for key, flag in pairs(TearFlagsLib.Flag) do
 		print(key, flag)
 	end
 end
 
-include(mod.Source .. ".library")
-include(mod.Source .. ".callbacks")
+include(TearFlagsLib.Source .. ".library")
+include(TearFlagsLib.Source .. ".callbacks")
 
 TearFlagsLib.RegisterCallbacks()
 

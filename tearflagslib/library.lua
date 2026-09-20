@@ -1,17 +1,16 @@
-local mod = TearFlagsLib
 local game = Game()
-mod.roomEntitiesCache = nil
+TearFlagsLib.roomEntitiesCache = nil
 
-mod.SPLITSHOT_TEAR_FLAGS 		= TearFlags.TEAR_SPLIT | TearFlags.TEAR_QUADSPLIT | TearFlags.TEAR_BONE | TearFlags.TEAR_BURSTSPLIT | TearFlags.TEAR_LASERSHOT
-mod.STICKY_TEAR_FLAGS 			= TearFlags.TEAR_STICKY | TearFlags.TEAR_BOOGER | TearFlags.TEAR_SPORE
-mod.EXPLOSIVE_TEARFLAGS 		= TearFlags.TEAR_EXPLOSIVE | TearFlags.TEAR_BURN
-mod.PIERCING_TEARFLAGS      	= TearFlags.TEAR_SPECTRAL | TearFlags.TEAR_PIERCING | TearFlags.TEAR_PERSISTENT | TearFlags.TEAR_LASERSHOT
-mod.FETUS_LASER_TEAR_FLAGS		= TearFlags.TEAR_FETUS_TECH | TearFlags.TEAR_FETUS_TECHX	
-mod.NO_REMOVE_TEAR_FLAGS		= TearFlags.TEAR_EXPLOSIVE | TearFlags.TEAR_MYSTERIOUS_LIQUID_CREEP
-mod.REMOVE_ON_SPLITSHOT_FLAGS	= TearFlags.TEAR_TRACTOR_BEAM | TearFlags.TEAR_SCATTER_BOMB | TearFlags.TEAR_LUDOVICO
+TearFlagsLib.SPLITSHOT_TEAR_FLAGS 		= TearFlags.TEAR_SPLIT | TearFlags.TEAR_QUADSPLIT | TearFlags.TEAR_BONE | TearFlags.TEAR_BURSTSPLIT | TearFlags.TEAR_LASERSHOT
+TearFlagsLib.STICKY_TEAR_FLAGS 			= TearFlags.TEAR_STICKY | TearFlags.TEAR_BOOGER | TearFlags.TEAR_SPORE
+TearFlagsLib.EXPLOSIVE_TEARFLAGS 		= TearFlags.TEAR_EXPLOSIVE | TearFlags.TEAR_BURN
+TearFlagsLib.PIERCING_TEARFLAGS      	= TearFlags.TEAR_SPECTRAL | TearFlags.TEAR_PIERCING | TearFlags.TEAR_PERSISTENT | TearFlags.TEAR_LASERSHOT
+TearFlagsLib.FETUS_LASER_TEAR_FLAGS		= TearFlags.TEAR_FETUS_TECH | TearFlags.TEAR_FETUS_TECHX	
+TearFlagsLib.NO_REMOVE_TEAR_FLAGS		= TearFlags.TEAR_EXPLOSIVE | TearFlags.TEAR_MYSTERIOUS_LIQUID_CREEP
+TearFlagsLib.REMOVE_ON_SPLITSHOT_FLAGS	= TearFlags.TEAR_TRACTOR_BEAM | TearFlags.TEAR_SCATTER_BOMB | TearFlags.TEAR_LUDOVICO
 
-mod.playerMimickingFamiliarMap = mod.playerMimickingFamiliarMap or {}
-mod.RegisterPlayerMimicFamiliar({
+TearFlagsLib.playerMimickingFamiliarMap = TearFlagsLib.playerMimickingFamiliarMap or {}
+TearFlagsLib.RegisterPlayerMimicFamiliar({
 	FamiliarVariant.INCUBUS,
 	FamiliarVariant.FATES_REWARD,
 	FamiliarVariant.SPRINKLER,
@@ -25,8 +24,8 @@ mod.RegisterPlayerMimicFamiliar({
 -- However Evil Eye is a special case that actually swings Bone Clubs as The Forgotton
 -- These clubs are not parented to The Forgotton, they're owned by the Evil Eye
 -- But Evil Eye is supposed to get TearFlags, so this has to be handled
-mod.playerMimickingEffectMap = mod.playerMimickingFamiliarMap or {}
-mod.RegisterPlayerMimicEffect({
+TearFlagsLib.playerMimickingEffectMap = TearFlagsLib.playerMimickingFamiliarMap or {}
+TearFlagsLib.RegisterPlayerMimicEffect({
 	EffectVariant.EVIL_EYE,
 })
 
@@ -48,20 +47,20 @@ local function truncateDecimals(value, numDigits)
 	return tonumber(truncatedString)
 end
 
-function mod.GetRoomEntities()
-	mod.roomEntitiesCache = mod.roomEntitiesCache or Isaac.GetRoomEntities()
-	return mod.roomEntitiesCache
+function TearFlagsLib.GetRoomEntities()
+	TearFlagsLib.roomEntitiesCache = TearFlagsLib.roomEntitiesCache or Isaac.GetRoomEntities()
+	return TearFlagsLib.roomEntitiesCache
 end
 
-function mod.ForAllEntities(func)
-	for _, entity in pairs(mod.GetRoomEntities()) do
+function TearFlagsLib.ForAllEntities(func)
+	for _, entity in pairs(TearFlagsLib.GetRoomEntities()) do
 		if entity:Exists() then
 			func(entity)
 		end
 	end
 end
 
-function mod.IsKnifeSwingable(knife)
+function TearFlagsLib.IsKnifeSwingable(knife)
 	return (
 		knife.Variant == KnifeVariant.BONE_CLUB or
 		knife.Variant == KnifeVariant.BONE_SCYTHE or
@@ -73,7 +72,7 @@ function mod.IsKnifeSwingable(knife)
 	)
 end
 
-function mod.IsKnifeSwinging(knife)
+function TearFlagsLib.IsKnifeSwinging(knife)
 	local animation = knife:GetSprite():GetAnimation()
 
 	return (
@@ -93,14 +92,14 @@ function mod.IsKnifeSwinging(knife)
 	)
 end
 
-function mod.DoesKnifeVariantPollEveryFrame(variant)
+function TearFlagsLib.DoesKnifeVariantPollEveryFrame(variant)
 	return (
 		variant == KnifeVariant.MOMS_KNIFE or
 		variant == KnifeVariant.SUMPTORIUM
 	)
 end
 
-function mod.IsKnifeSwingableAndThrowable(knife)
+function TearFlagsLib.IsKnifeSwingableAndThrowable(knife)
 	return (
 		knife.Variant == KnifeVariant.BONE_CLUB or
 		knife.Variant == KnifeVariant.BONE_SCYTHE or
@@ -108,11 +107,11 @@ function mod.IsKnifeSwingableAndThrowable(knife)
 	)
 end
 
-function mod.IsKnifeThrowable(knife)
-	return mod.IsKnifeVariantTrueKnife(knife.Variant) or mod.IsKnifeSwingableAndThrowable(knife)
+function TearFlagsLib.IsKnifeThrowable(knife)
+	return TearFlagsLib.IsKnifeVariantTrueKnife(knife.Variant) or TearFlagsLib.IsKnifeSwingableAndThrowable(knife)
 end
 
-function mod.CanClubVariantHaveTearEffects(variant)
+function TearFlagsLib.CanClubVariantHaveTearEffects(variant)
 	return (
 		variant == KnifeVariant.BONE_CLUB or
 		variant == KnifeVariant.BONE_SCYTHE or
@@ -121,7 +120,7 @@ function mod.CanClubVariantHaveTearEffects(variant)
 	)
 end
 
-function mod.IsKnifeVariantClub(variant)
+function TearFlagsLib.IsKnifeVariantClub(variant)
 	return (
 		variant == KnifeVariant.BONE_CLUB or
 		variant == KnifeVariant.BONE_SCYTHE or
@@ -131,21 +130,21 @@ function mod.IsKnifeVariantClub(variant)
 	)
 end
 
-function mod.IsKnifeVariantSword(variant)
+function TearFlagsLib.IsKnifeVariantSword(variant)
 	return (
 		variant == KnifeVariant.SPIRIT_SWORD or
 		variant == KnifeVariant.TECH_SWORD
 	)
 end
 
-function mod.IsKnifeVariantTrueKnife(variant)
+function TearFlagsLib.IsKnifeVariantTrueKnife(variant)
 	return (
 		variant == KnifeVariant.MOMS_KNIFE or
 		variant == KnifeVariant.SUMPTORIUM
 	)
 end
 
-function mod.GetSwingingKnifeHitboxScaler(knife)
+function TearFlagsLib.GetSwingingKnifeHitboxScaler(knife)
 	if knife.Variant == KnifeVariant.BONE_SCYTHE then
 		return 3
 	end
@@ -153,8 +152,8 @@ function mod.GetSwingingKnifeHitboxScaler(knife)
 	return 2
 end
 
-function mod.GetSwingingKnifeCapsulePositionRadius(knife)
-	local scaler = mod.GetSwingingKnifeHitboxScaler(knife)
+function TearFlagsLib.GetSwingingKnifeCapsulePositionRadius(knife)
+	local scaler = TearFlagsLib.GetSwingingKnifeHitboxScaler(knife)
 	local capsuleRadius = knife.Size * scaler * knife.SpriteScale.X
 	local knifeVectorDirection = Vector(0, 1):Rotated(knife.SpriteRotation)
 	local capsulePosition = knife.Position - knife.SpawnerEntity.Velocity + knifeVectorDirection * capsuleRadius
@@ -162,16 +161,16 @@ function mod.GetSwingingKnifeCapsulePositionRadius(knife)
 	return capsulePosition, capsuleRadius 
 end
 
-function mod.DoesEntityCollideWithSwingingKnife(entity, knife)
-	local position, radius = mod.GetSwingingKnifeCapsulePositionRadius(knife)
+function TearFlagsLib.DoesEntityCollideWithSwingingKnife(entity, knife)
+	local position, radius = TearFlagsLib.GetSwingingKnifeCapsulePositionRadius(knife)
 	return entity.Position:Distance(position) < entity.Size + radius
 end
 
-function mod.AreEntitiesSame(entity1, entity2)
+function TearFlagsLib.AreEntitiesSame(entity1, entity2)
 	return entity1 and entity2 and GetPtrHash(entity1) == GetPtrHash(entity2)
 end
 
-function mod.GetTearPlayer(tear, strict)
+function TearFlagsLib.GetTearPlayer(tear, strict)
 	if strict and not (tear.SpawnerEntity or tear.Parent) then return end
 
 	local parent = tear.SpawnerEntity or tear.Parent or Isaac.GetPlayer()
@@ -189,11 +188,11 @@ function mod.GetTearPlayer(tear, strict)
 	return parent:ToPlayer() or Isaac.GetPlayer()
 end
 
-function mod.IsFamiliarPlayerMimic(familiar)
-	return mod.playerMimickingFamiliarMap[familiar.Variant]
+function TearFlagsLib.IsFamiliarPlayerMimic(familiar)
+	return TearFlagsLib.playerMimickingFamiliarMap[familiar.Variant]
 end
 
-function mod.WasEntityFiredByPlayerMimic(entity, explicit)
+function TearFlagsLib.WasEntityFiredByPlayerMimic(entity, explicit)
 	if not entity.SpawnerEntity then
 		return false
 	end
@@ -204,19 +203,19 @@ function mod.WasEntityFiredByPlayerMimic(entity, explicit)
 	end
 
 	local familiar = entity.SpawnerEntity:ToFamiliar()
-	if familiar and mod.playerMimickingFamiliarMap[familiar.Variant] then
+	if familiar and TearFlagsLib.playerMimickingFamiliarMap[familiar.Variant] then
 		return true
 	end
 
 	local effect = entity.SpawnerEntity:ToEffect()
-	if effect and mod.playerMimickingEffectMap[effect.Variant] then
+	if effect and TearFlagsLib.playerMimickingEffectMap[effect.Variant] then
 		return true
 	end
 
 	return false
 end
 
-function mod.ShouldEntityGetTearCollisionEffects(entity, tear)
+function TearFlagsLib.ShouldEntityGetTearCollisionEffects(entity, tear)
 	return (
 		entity:ToNPC() and
 		not entity:HasEntityFlags(EntityFlag.FLAG_ICE_FROZEN) and
@@ -224,7 +223,7 @@ function mod.ShouldEntityGetTearCollisionEffects(entity, tear)
 	)
 end
 
-function mod.ShouldEntityGetKnifeCollisionEffects(entity, knife)
+function TearFlagsLib.ShouldEntityGetKnifeCollisionEffects(entity, knife)
 	return (
 		entity:ToNPC() and
 		entity:Exists() and
@@ -236,7 +235,7 @@ function mod.ShouldEntityGetKnifeCollisionEffects(entity, knife)
 	)
 end
 
-function mod.GetCapsule(locus1, locus2, radius) -- Nobody is allowed to talk to me
+function TearFlagsLib.GetCapsule(locus1, locus2, radius) -- Nobody is allowed to talk to me
 	return {
 		Locus1 = locus1,
 		Locus2 = locus2,
@@ -244,7 +243,7 @@ function mod.GetCapsule(locus1, locus2, radius) -- Nobody is allowed to talk to 
 	}
 end
 
-function mod.GenerateCapsuleFromEntity(entity)
+function TearFlagsLib.GenerateCapsuleFromEntity(entity)
 	local scaler = math.min(entity.SizeMulti.X, entity.SizeMulti.Y)
 	local stretcher = math.max(entity.SizeMulti.X, entity.SizeMulti.Y)
 	local trueRadius = entity.Size * scaler
@@ -262,7 +261,7 @@ function mod.GenerateCapsuleFromEntity(entity)
 	}
 end
 
-function mod.SimulateCapsuleCapsuleCollision(capsule1, capsule2)
+function TearFlagsLib.SimulateCapsuleCapsuleCollision(capsule1, capsule2)
 	local capsules = {capsule1, capsule2}
 
 	for i, hostCapsule in pairs(capsules) do
@@ -281,11 +280,11 @@ function mod.SimulateCapsuleCapsuleCollision(capsule1, capsule2)
 	return false
 end
 
-function mod.DoesCapsuleCollideWithEntity(capsule, entity)
-	return mod.SimulateCapsuleCapsuleCollision(capsule, mod.GenerateCapsuleFromEntity(entity))
+function TearFlagsLib.DoesCapsuleCollideWithEntity(capsule, entity)
+	return TearFlagsLib.SimulateCapsuleCapsuleCollision(capsule, TearFlagsLib.GenerateCapsuleFromEntity(entity))
 end
 
-function mod.GetLaserSampleCapsules(laser)
+function TearFlagsLib.GetLaserSampleCapsules(laser)
 	local samples = laser:GetSamples()
 	local capsules = {}
 
@@ -310,18 +309,18 @@ function mod.GetLaserSampleCapsules(laser)
 	return capsules
 end
 
-function mod.CanLaserDamageThisFrame(laser)
+function TearFlagsLib.CanLaserDamageThisFrame(laser)
 	return (
 		laser.FrameCount == 0 or
 		(laser.FrameCount > 2 and laser.FrameCount % 2 == 1)
 	)
 end
 
-function mod.CanBrimstoneBallDamageThisFrame()
+function TearFlagsLib.CanBrimstoneBallDamageThisFrame()
 	return game:GetFrameCount() % 2 == 0 -- Crazy stuff
 end
 
-function mod.CostumeStickyTear(tear)
+function TearFlagsLib.CostumeStickyTear(tear)
 	if tear.TearFlags & TearFlags.TEAR_SPORE > 0 then
 		tear:ChangeVariant(TearVariant.SPORE)
 	elseif tear.TearFlags & TearFlags.TEAR_BOOGER > 0 then
@@ -331,7 +330,7 @@ function mod.CostumeStickyTear(tear)
 	end
 end
 
-function mod.GetVasculitisTearVariant(npc)
+function TearFlagsLib.GetVasculitisTearVariant(npc)
 	local variant = (REPENTANCE_PLUS and 26) or 1
 
 	if npc:HasEntityFlags(EntityFlag.FLAG_BURN) then
@@ -345,7 +344,7 @@ function mod.GetVasculitisTearVariant(npc)
 	return variant
 end
 
-function mod.IsTearVasculitisTear(tear, comparator)
+function TearFlagsLib.IsTearVasculitisTear(tear, comparator)
 	local level = game:GetLevel()
 	local stageFactor = level:GetStage() * 0.3 + 3.2
 	local numTears = math.min(16, math.ceil(comparator.MaxHitPoints / stageFactor))
@@ -358,11 +357,11 @@ function mod.IsTearVasculitisTear(tear, comparator)
 	)
 end
 
-function mod.CopyTable(oldTable)
+function TearFlagsLib.CopyTable(oldTable)
 	local newTable = {}
 	for key, value in pairs(oldTable) do
 		if type(value) == "table" then
-			newTable[key] = mod.CopyTable(value)
+			newTable[key] = TearFlagsLib.CopyTable(value)
 		else
 			newTable[key] = value
 		end
@@ -370,7 +369,7 @@ function mod.CopyTable(oldTable)
 	return newTable
 end
 
-function mod.FuzzyReplaceTable(oldTable, newTable)
+function TearFlagsLib.FuzzyReplaceTable(oldTable, newTable)
 	for key, value in pairs(newTable) do
 		oldTable[key] = value
 	end
@@ -378,16 +377,16 @@ function mod.FuzzyReplaceTable(oldTable, newTable)
 	return oldTable
 end
 
-function mod.AgnosticGetVanillaTearFlags(entity, skipPlayerCheck)
-	local flags = mod.BitSetZero
-	entity = mod.Cast(entity)
+function TearFlagsLib.AgnosticGetVanillaTearFlags(entity, skipPlayerCheck)
+	local flags = TearFlagsLib.BitSetZero
+	entity = TearFlagsLib.Cast(entity)
 
 	if (entity.TearFlags or entity.Flags) and entity.Type ~= 1 then
 		flags = flags | (entity.TearFlags or entity.Flags)
 	end
 
 	if not skipPlayerCheck then
-		local player = entity.Type == 1 and entity or mod.GetTearPlayer(entity, true)
+		local player = entity.Type == 1 and entity or TearFlagsLib.GetTearPlayer(entity, true)
 		if player then
 			flags = flags | player.TearFlags
 		end
@@ -396,31 +395,31 @@ function mod.AgnosticGetVanillaTearFlags(entity, skipPlayerCheck)
 	return flags
 end
 
-function mod.PlayerHasItemEffect(player, item)
+function TearFlagsLib.PlayerHasItemEffect(player, item)
 	return player:GetEffects():HasCollectibleEffect(item)
 end
 
-function mod.IsEntityAntiGravLaserSpawner(entity)
+function TearFlagsLib.IsEntityAntiGravLaserSpawner(entity)
 	return entity.Type == EntityType.ENTITY_EFFECT and (
 		entity.Variant == EffectVariant.BRIMSTONE_SWIRL or
 		entity.Variant == EffectVariant.TECH_DOT
 	)
 end
 
-function mod.IsEntitySpiritSword(entity)
+function TearFlagsLib.IsEntitySpiritSword(entity)
 	return entity.Type == EntityType.ENTITY_KNIFE and (
 		entity.Variant == KnifeVariant.SPIRIT_SWORD or
 		entity.Variant == KnifeVariant.TECH_SWORD
 	)
 end
 
-function mod.IsEntityOcularRift(entity)
+function TearFlagsLib.IsEntityOcularRift(entity)
 	return entity.Type == EntityType.ENTITY_EFFECT and (
 		entity.Variant == EffectVariant.RIFT
 	)
 end
 
-function mod.IsLaserTrisagion(laser)
+function TearFlagsLib.IsLaserTrisagion(laser)
 	return (
 		laser.Variant == 3 and
 		laser.SubType == 0 and
@@ -430,93 +429,93 @@ function mod.IsLaserTrisagion(laser)
 	)
 end
 
-function mod.IsLaserIncubusTechnology(source)
+function TearFlagsLib.IsLaserIncubusTechnology(source)
 	return (
 		source.Variant == LaserVariant.THIN_RED and
-		mod.WasEntityFiredByPlayerMimic(source, true)
+		TearFlagsLib.WasEntityFiredByPlayerMimic(source, true)
 	)
 end
 
-function mod.IsLaserCSectionTechnology(source, isFetusParent)
+function TearFlagsLib.IsLaserCSectionTechnology(source, isFetusParent)
 	if isFetusParent then
 		return (
 			source.Parent and
 			source.Parent.Type == 2 and
-			source:ToLaser().TearFlags & mod.FETUS_LASER_TEAR_FLAGS ~= mod.BitSetZero
+			source:ToLaser().TearFlags & TearFlagsLib.FETUS_LASER_TEAR_FLAGS ~= TearFlagsLib.BitSetZero
 		)
 	else
-		return source:ToLaser().TearFlags & mod.FETUS_LASER_TEAR_FLAGS ~= mod.BitSetZero
+		return source:ToLaser().TearFlags & TearFlagsLib.FETUS_LASER_TEAR_FLAGS ~= TearFlagsLib.BitSetZero
 	end
 end
 
-function mod.IsLaserClubTechnology(source)
+function TearFlagsLib.IsLaserClubTechnology(source)
 	return (
 		source.Parent and
 		source.Parent.Type == 8 and
-		mod.CanClubVariantHaveTearEffects(source.Parent.Variant)
+		TearFlagsLib.CanClubVariantHaveTearEffects(source.Parent.Variant)
 	)
 end
 
-function mod.IsLaserThrownClubTechnology(laser, club)
+function TearFlagsLib.IsLaserThrownClubTechnology(laser, club)
 	return (
-		mod.AreEntitiesSame(laser.SpawnerEntity, club.SpawnerEntity) and
+		TearFlagsLib.AreEntitiesSame(laser.SpawnerEntity, club.SpawnerEntity) and
 		laser.EndPoint:Distance(club.Position + Vector.FromAngle(club.Rotation) * 16) < 2 -- I've seen this miss by up to 1.5, so 2 seems safe, even if it's not as accurate as I would like
 	)
 end
 
-function mod.IsLaserFinger(laser)
+function TearFlagsLib.IsLaserFinger(laser)
 	return (
 		laser.SpawnerEntity and
-		mod.GetSafeData(laser.SpawnerEntity).IsFingering
+		TearFlagsLib.GetSafeData(laser.SpawnerEntity).IsFingering
 	)
 end
 
-function mod.ShouldCopyLaserFlagsOnFirstUpdate(source)
-	return not mod.GetSafeData(source).checkedFlags and (
-		mod.IsLaserCSectionTechnology(source, true) or
-		mod.IsLaserClubTechnology(source)
+function TearFlagsLib.ShouldCopyLaserFlagsOnFirstUpdate(source)
+	return not TearFlagsLib.GetSafeData(source).checkedFlags and (
+		TearFlagsLib.IsLaserCSectionTechnology(source, true) or
+		TearFlagsLib.IsLaserClubTechnology(source)
 	)
 end
 
-function mod.ShouldPollLaserFlagsOnApply(source)
-	return not mod.GetSafeData(source).checkedFlags and (
-		mod.IsLaserIncubusTechnology(source) or
-		mod.IsLaserCSectionTechnology(source) or
-		mod.IsLaserClubTechnology(source) or
-		mod.IsLaserTrisagion(source)
+function TearFlagsLib.ShouldPollLaserFlagsOnApply(source)
+	return not TearFlagsLib.GetSafeData(source).checkedFlags and (
+		TearFlagsLib.IsLaserIncubusTechnology(source) or
+		TearFlagsLib.IsLaserCSectionTechnology(source) or
+		TearFlagsLib.IsLaserClubTechnology(source) or
+		TearFlagsLib.IsLaserTrisagion(source)
 	)
 end
 
-function mod.DidLaserCopyPlayerFlags(source)
+function TearFlagsLib.DidLaserCopyPlayerFlags(source)
 	return (
-		source:ToLaser().TearFlags & mod.GuarenteedFlagTracker == mod.GuarenteedFlagTracker
-		and not mod.GetSafeData(source).CanRollForFlags
+		source:ToLaser().TearFlags & TearFlagsLib.GuarenteedFlagTracker == TearFlagsLib.GuarenteedFlagTracker
+		and not TearFlagsLib.GetSafeData(source).CanRollForFlags
 	)
 end
 
-function mod.IsSwordCSectionSword(source)
-	return (
-		source.Parent and
-		source.Parent.Type == 2 and
-		source:ToKnife().TearFlags & TearFlags.TEAR_FETUS_SWORD ~= mod.BitSetZero
-	)
-end
-
-function mod.IsClubCSectionClub(source)
+function TearFlagsLib.IsSwordCSectionSword(source)
 	return (
 		source.Parent and
 		source.Parent.Type == 2 and
-		source:ToKnife().TearFlags & TearFlags.TEAR_FETUS_BONE ~= mod.BitSetZero
+		source:ToKnife().TearFlags & TearFlags.TEAR_FETUS_SWORD ~= TearFlagsLib.BitSetZero
 	)
 end
 
-function mod.EstimateCSectionParent(source)
+function TearFlagsLib.IsClubCSectionClub(source)
+	return (
+		source.Parent and
+		source.Parent.Type == 2 and
+		source:ToKnife().TearFlags & TearFlags.TEAR_FETUS_BONE ~= TearFlagsLib.BitSetZero
+	)
+end
+
+function TearFlagsLib.EstimateCSectionParent(source)
 	local dist = 9e9
 	local closest = nil
 
 	for _, tear in pairs(Isaac.FindByType(2)) do
-		local player = mod.GetTearPlayer(tear)
-		if mod.AreEntitiesSame(player, source.SpawnerEntity) and tear.Position:Distance(source.Position) < dist then
+		local player = TearFlagsLib.GetTearPlayer(tear)
+		if TearFlagsLib.AreEntitiesSame(player, source.SpawnerEntity) and tear.Position:Distance(source.Position) < dist then
 			dist = tear.Position:Distance(source.Position)
 			closest = tear
 		end
@@ -525,18 +524,18 @@ function mod.EstimateCSectionParent(source)
 	return closest
 end
 
-function mod.SetTearScale(tear, scale)
+function TearFlagsLib.SetTearScale(tear, scale)
 	local scytheMod = tear.Variant == 8 and 0.5 or 1
 	tear.Scale = scale * scytheMod
 end
 
-function mod.TryChangeTearVariant(tear, variant)
+function TearFlagsLib.TryChangeTearVariant(tear, variant)
 	if tear.Variant ~= variant then
 		tear:ChangeVariant(variant)
 	end
 end
 
-function mod.PlayerHasLudoKnife(player)
+function TearFlagsLib.PlayerHasLudoKnife(player)
 	local weapon = player:GetActiveWeaponEntity()
 
 	return (
@@ -547,7 +546,7 @@ function mod.PlayerHasLudoKnife(player)
 	)
 end
 
-function mod.Cast(entity)
+function TearFlagsLib.Cast(entity)
 	if entity.Type == 1 then
 		return entity:ToPlayer()
 	elseif entity.Type == 2 then
@@ -573,17 +572,17 @@ function mod.Cast(entity)
 	end
 end
 
-function mod.SpawnDummyEntity(player, weaponFlag, positionOverride) -- Spawns an entity that removes itself after the current update cycle
+function TearFlagsLib.SpawnDummyEntity(player, weaponFlag, positionOverride) -- Spawns an entity that removes itself after the current update cycle
 	local dummy = Isaac.CreateTimer(function() end, 0, 0, false)
-	mod.GetSafeData(dummy).dummyWeaponIdentity = weaponFlag
+	TearFlagsLib.GetSafeData(dummy).dummyWeaponIdentity = weaponFlag
 	dummy.Parent = player
 	dummy.Position = positionOverride or player.Position
 
 	return dummy
 end
 
-function mod.GetVanillaTearFlagDamageFlags(source)
-	local flags = mod.AgnosticGetVanillaTearFlags(source, true) | mod.GetCustomVanillaTearFlags(source)
+function TearFlagsLib.GetVanillaTearFlagDamageFlags(source)
+	local flags = TearFlagsLib.AgnosticGetVanillaTearFlags(source, true) | TearFlagsLib.GetCustomVanillaTearFlags(source)
 	local damageFlags = 0
 
 	if flags & TearFlags.TEAR_MULLIGAN == TearFlags.TEAR_MULLIGAN then
@@ -595,7 +594,7 @@ function mod.GetVanillaTearFlagDamageFlags(source)
 	end
 
 	if flags & TearFlags.TEAR_HP_DROP == TearFlags.TEAR_HP_DROP then
-		if mod.GetTearPlayer(source):GetCollectibleRNG(CollectibleType.COLLECTIBLE_GIMPY):RandomFloat() < 1/3 then -- Gimpy doesn't even actually use this anymore but SOMETHING probably does
+		if TearFlagsLib.GetTearPlayer(source):GetCollectibleRNG(CollectibleType.COLLECTIBLE_GIMPY):RandomFloat() < 1/3 then -- Gimpy doesn't even actually use this anymore but SOMETHING probably does
 			damageFlags = damageFlags | DamageFlag.DAMAGE_SPAWN_RED_HEART
 		end
 	end
@@ -620,7 +619,7 @@ function mod.GetVanillaTearFlagDamageFlags(source)
 end
 
 -- Monstro's Lung replication by Ghostbroster and TaigaTreant
-function mod.GetMonstroBurstInfo(pos, baseVel, num, baseFallSpeed, baseFallAccel, rng)
+function TearFlagsLib.GetMonstroBurstInfo(pos, baseVel, num, baseFallSpeed, baseFallAccel, rng)
     local out = {}
     local rng = rng or Isaac.GetPlayer():GetCollectibleRNG(CollectibleType.COLLECTIBLE_MONSTROS_LUNG)
 
@@ -654,14 +653,14 @@ function mod.GetMonstroBurstInfo(pos, baseVel, num, baseFallSpeed, baseFallAccel
 end
 
 
-function mod.GetPlayerMonstroBurstInfo(player, pos, vel, num, rng, ignoreShotSpeed)
+function TearFlagsLib.GetPlayerMonstroBurstInfo(player, pos, vel, num, rng, ignoreShotSpeed)
 	if not ignoreShotSpeed then
         vel = vel * player.ShotSpeed
     end
-    return mod.GetMonstroBurstInfo(pos, vel, num, player.TearFallingSpeed, player.TearFallingAcceleration, rng)
+    return TearFlagsLib.GetMonstroBurstInfo(pos, vel, num, player.TearFallingSpeed, player.TearFallingAcceleration, rng)
 end
 
-function mod.GetMonstroBombBurstInfo(pos, baseVel, num, rng)
+function TearFlagsLib.GetMonstroBombBurstInfo(pos, baseVel, num, rng)
     local out = {}
     local rng = rng or Isaac.GetPlayer():GetCollectibleRNG(CollectibleType.COLLECTIBLE_MONSTROS_LUNG)
 
@@ -688,7 +687,7 @@ end
 
 -- Temporary, some laser functions aren't in release rgon yet
 local rgonUpdated = getmetatable(EntityLaser).__class.SetInitSound ~= nil
-function mod.GetMonstroLaserBurstInfo(pos, baseDir, num)
+function TearFlagsLib.GetMonstroLaserBurstInfo(pos, baseDir, num)
     local out = {}
     local rng = rng or Isaac.GetPlayer():GetCollectibleRNG(CollectibleType.COLLECTIBLE_MONSTROS_LUNG)
     baseDir = baseDir:Normalized()
@@ -723,7 +722,7 @@ function mod.GetMonstroLaserBurstInfo(pos, baseDir, num)
     return out
 end
 
-function mod.IsLaserVariantBrimstone(variant)
+function TearFlagsLib.IsLaserVariantBrimstone(variant)
 	return (
 		variant == LaserVariant.THICK_RED
 		or variant == LaserVariant.SHOOP
@@ -734,16 +733,16 @@ function mod.IsLaserVariantBrimstone(variant)
 	)
 end
 
-function mod.RemoveUserDataValueFromTable(value, tbl)
+function TearFlagsLib.RemoveUserDataValueFromTable(value, tbl)
 	for i = #tbl, 1, -1 do
-		if mod.AreEntitiesSame(value, tbl[i]) then
+		if TearFlagsLib.AreEntitiesSame(value, tbl[i]) then
 			table.remove(tbl, i)
 		end
 	end
 end
 
 -- Entity identification shorthands for flag application
-mod.IsEntity = {
+TearFlagsLib.IsEntity = {
 	-- Tears
 	Tear 	= function(entity) return entity.Type == 2 end,
 
@@ -754,13 +753,13 @@ mod.IsEntity = {
 	Laser 	= function(entity) return entity.Type == 7 end,
 
 	-- Knives
-	Knife 	= function(entity) return entity.Type == 8 and mod.IsKnifeThrowable(entity) and entity.SubType ~= 4 end,
-	Club 	= function(entity) return entity.Type == 8 and entity.SubType == 4 and not mod.IsKnifeVariantSword(entity.Variant) end,
-	Sword 	= function(entity) return entity.Type == 8 and mod.IsKnifeVariantSword(entity.Variant) end,
+	Knife 	= function(entity) return entity.Type == 8 and TearFlagsLib.IsKnifeThrowable(entity) and entity.SubType ~= 4 end,
+	Club 	= function(entity) return entity.Type == 8 and entity.SubType == 4 and not TearFlagsLib.IsKnifeVariantSword(entity.Variant) end,
+	Sword 	= function(entity) return entity.Type == 8 and TearFlagsLib.IsKnifeVariantSword(entity.Variant) end,
 
 	-- Effects
 	Aquarius = function(entity) return entity.Type == 1000 and entity.Variant == EffectVariant.PLAYER_CREEP_HOLYWATER_TRAIL end,
-	LaserSwirl = function(entity) return mod.IsEntityAntiGravLaserSpawner(entity) end,
+	LaserSwirl = function(entity) return TearFlagsLib.IsEntityAntiGravLaserSpawner(entity) end,
 	BrimstoneBall = function(entity) return entity.Type == 1000 and entity.Variant == EffectVariant.BRIMSTONE_BALL end,
 	OcularRift = function(entity) return entity.Type == 1000 and entity.Variant == EffectVariant.RIFT end,
 }
