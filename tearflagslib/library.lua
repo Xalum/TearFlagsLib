@@ -687,7 +687,7 @@ end
 
 -- Temporary, some laser functions aren't in release rgon yet
 local rgonUpdated = getmetatable(EntityLaser).__class.SetInitSound ~= nil
-function TearFlagsLib.GetMonstroLaserBurstInfo(pos, baseDir, num)
+function TearFlagsLib.GetMonstroLaserBurstInfo(pos, baseDir, num, rng)
     local out = {}
     local rng = rng or Isaac.GetPlayer():GetCollectibleRNG(CollectibleType.COLLECTIBLE_MONSTROS_LUNG)
     baseDir = baseDir:Normalized()

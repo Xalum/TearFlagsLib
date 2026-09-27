@@ -142,32 +142,22 @@ TearFlagsLib.CallbackFuncs.PostThrowCatchKnife = function(_, knife)
 		local data = TearFlagsLib.GetSafeData(knife)
 		local isFlying = knife:IsFlying()
 
-		if isFlying then
-			local isReturning = data.lastFrameDistance and data.lastFrameDistance > knife.Position:Distance(knife.SpawnerEntity.Position)
-			
-			if not data.lastFrameWasFlying then
-				if TearFlagsLib.IsKnifeSwingableAndThrowable(knife) then
-					Isaac.RunCallbackWithParam(TearFlagsLib.Callback.POST_THROW_CLUB, knife.Variant, knife, TearFlagsLib.GetTearPlayer(knife))
-					
-					-- Only Clubs copy flags to Lasers spawned by their Technology synergy, Knives use "Chanceless Lasers"
-					-- One shudders to think what the fuck they were thinking
-					for _, laser in pairs(Isaac.FindByType(7)) do
-						if laser.FrameCount == 0 and TearFlagsLib.IsLaserThrownClubTechnology(laser:ToLaser(), knife) then
-							TearFlagsLib.GetSafeData(laser).checkedFlags = true
-							TearFlagsLib.CopyTearFlags(laser, knife, TearFlagsLib.WeaponFlag.LASER, {wipe = true})
-						end
+		if isFlying and not data.lastFrameWasFlying then
+			if TearFlagsLib.IsKnifeSwingableAndThrowable(knife) then
+				Isaac.RunCallbackWithParam(TearFlagsLib.Callback.POST_THROW_CLUB, knife.Variant, knife, TearFlagsLib.GetTearPlayer(knife))
+				
+				-- Only Clubs copy flags to Lasers spawned by their Technology synergy, Knives use "Chanceless Lasers"
+				-- One shudders to think what the fuck they were thinking
+				for _, laser in pairs(Isaac.FindByType(7)) do
+					if laser.FrameCount == 0 and TearFlagsLib.IsLaserThrownClubTechnology(laser:ToLaser(), knife) then
+						TearFlagsLib.GetSafeData(laser).checkedFlags = true
+						TearFlagsLib.CopyTearFlags(laser, knife, TearFlagsLib.WeaponFlag.LASER, {wipe = true})
 					end
-				else
-					Isaac.RunCallbackWithParam(TearFlagsLib.Callback.POST_THROW_KNIFE, knife.Variant, knife, TearFlagsLib.GetTearPlayer(knife))
 				end
+			else
+				Isaac.RunCallbackWithParam(TearFlagsLib.Callback.POST_THROW_KNIFE, knife.Variant, knife, TearFlagsLib.GetTearPlayer(knife))
 			end
-
-			if isReturning and not data.lastFrameWasReturning then
-				data.lastFrameWasReturning = true
-			end
-
-			data.lastFrameWasReturning = isReturning
-		elseif data.lastFrameWasFlying then
+		elseif data.lastFrameWasFlying and not isFlying then
 			if TearFlagsLib.IsKnifeSwingableAndThrowable(knife) then
 				Isaac.RunCallbackWithParam(TearFlagsLib.Callback.POST_CATCH_CLUB, knife.Variant, knife, TearFlagsLib.GetTearPlayer(knife))
 			else
@@ -175,11 +165,9 @@ TearFlagsLib.CallbackFuncs.PostThrowCatchKnife = function(_, knife)
 			end
 
 			TearFlagsLib.WipeTearFlags(knife, true)
-			data.lastFrameWasReturning = false
 		end
 
 		data.lastFrameWasFlying = isFlying
-		data.lastFrameDistance = knife.Position:Distance(knife.SpawnerEntity.Position)
 	end
 end
 
@@ -265,12 +253,18 @@ TearFlagsLib.CallbackFuncs.PostFireLaser = function(_, laser)
 		local source = TearFlagsLib.FiringSplitLaser.Spawner
 		local params = TearFlagsLib.FiringSplitLaser.Params
 
+		-- Prep
 		laser:ClearTearFlags(laser.TearFlags)
+
+		-- Copy Custom Flags
+		TearFlagsLib.VolatileFlags = params.RemoveCustomFlags
 		TearFlagsLib.CopyTearFlags(laser, source, TearFlagsLib.WeaponFlag.LASER, {wipe = true})
+		TearFlagsLib.VolatileFlags = nil
+
+		-- Copy Vanilla Flags
 		laser:AddTearFlags((source.TearFlags or source.Flags or TearFlagsLib.BitSetZero))
 		laser:AddTearFlags(TearFlagsLib.GetCustomVanillaTearFlags(source))
 		laser:ClearTearFlags(params.RemoveFlags or TearFlagsLib.BitSetZero)
-		TearFlagsLib.ClearTearFlags(laser, params.RemoveCustomFlags or TearFlagsLib.BitSetInfinity.Zero)
 		TearFlagsLib.WipeCustomVanillaTearFlags(laser)
 	elseif TearFlagsLib.WasEntityFiredByPlayerMimic(laser) and not TearFlagsLib.IsLaserFinger(laser) then
 		TearFlagsLib.GetSafeData(laser).CanRollForFlags = true
@@ -629,7 +623,10 @@ end
 
 TearFlagsLib.CallbackFuncs.CatchSplitTear = function(_, new, old, splitType)
 	TearFlagsLib.GetSafeData(new).isSplitTear = true
-	TearFlagsLib.CopyTearFlags(new, old, TearFlagsLib.WeaponFlag.TEAR, {wipe = true})
+	TearFlagsLib.CopyTearFlags(new, old, TearFlagsLib.WeaponFlag.TEAR, {
+		wipe = true,
+		skipVanilla = true,
+	})
 	TearFlagsLib.GetSafeData(new).checkedForFlags = true
 end
 

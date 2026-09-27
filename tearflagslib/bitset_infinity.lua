@@ -62,7 +62,7 @@ function BitSetInfinity.__bnot(a) -- Bitwise NOT (~)
 	end
 
 	local newSet = BitSetInfinity(table.unpack(set))
-	newSet.Inverted = not a.Inverted
+	newSet:SetInversion(not a[-1])
 
 	return newSet
 end
@@ -126,17 +126,25 @@ function BitSetInfinity:__newindex(key, value)
 	end
 end
 
+function BitSetInfinity:SetInversion(raw)
+	rawset(self, -1, raw)
+end
+
+function BitSetInfinity:IsInverted()
+	return self[-1]
+end
+
 function BitSetInfinity:Clone()
 	local set = {}
 	for i = 1, #self do set[i] = self[i] end
 	local new = BitSetInfinity(table.unpack(set))
-	new.Inverted = self.Inverted
+	new:SetInversion(self[-1])
 
 	return new
 end
 
 function BitSetInfinity:Extend(value)
-	rawset(self, #self + 1, value or (self.Inverted and -1 or 0))
+	rawset(self, #self + 1, value or (self:IsInverted() and -1 or 0))
 end
 
 function BitSetInfinity:Extended(value)
@@ -146,7 +154,7 @@ function BitSetInfinity:Extended(value)
 end
 
 function BitSetInfinity:Trim()
-	local check = self.Inverted and -1 or 0
+	local check = self:IsInverted() and -1 or 0
 	while self[#self] == check do
 		self[#self] = nil
 	end

@@ -1,5 +1,5 @@
 TearFlagsLib = TearFlagsLib or RegisterMod("Tear Flags Library", 1)
-local build = 101
+local build = 103
 local version = "1.1.1"
 local localHolder = {}
 
@@ -292,6 +292,7 @@ end
 function TearFlagsLib.AddTearFlags(entity, flags, force)
 	local data = TearFlagsLib.GetSafeData(entity)
 	local player = TearFlagsLib.GetTearPlayer(entity)
+	entity = TearFlagsLib.Cast(entity)
 
 	flags:ForEach(function(flag)
 		local skipAdd = false
@@ -308,7 +309,6 @@ function TearFlagsLib.AddTearFlags(entity, flags, force)
 		end
 
 		if not skipAdd then
-			flag:EqualiseLength(data.tearFlags)
 			data.tearFlags = data.tearFlags | flag
 			
 			for _, callbackData in pairs(Isaac.GetCallbacks(TearFlagsLib.Callback.POST_ADD_TEARFLAG)) do
@@ -337,6 +337,7 @@ end
 function TearFlagsLib.ClearTearFlags(entity, flags, force)
 	local data = TearFlagsLib.GetSafeData(entity)
 	flags = flags & data.tearFlags -- Data validation for the callback
+	entity = TearFlagsLib.Cast(entity)
 	
 	flags:ForEach(function(flag)
 		local player = TearFlagsLib.GetTearPlayer(entity)
@@ -354,7 +355,6 @@ function TearFlagsLib.ClearTearFlags(entity, flags, force)
 		end
 		
 		if canRemove then
-			flag:EqualiseLength(data.tearFlags)
 			data.tearFlags = data.tearFlags &~ flag
 
 			local params = TearFlagsLib.GetTearFlagParams(entity, flag)
@@ -450,14 +450,15 @@ end
 
 function TearFlagsLib.CopyTearFlags(recipient, donor, weaponFlag, params) -- weaponFlag is technically optional, but you should always provide one if you can (the weaponFlag of the recipient)
 	params = params or {}
+	recipient = TearFlagsLib.Cast(recipient)
 
 	if params.wipe then
 		TearFlagsLib.WipeTearFlags(recipient)
 		TearFlagsLib.WipeCustomVanillaTearFlags(recipient)
 	end
 
-	TearFlagsLib.AddTearFlags(recipient, TearFlagsLib.GetTearFlags(donor))
-	TearFlagsLib.SetTearFlagParams(recipient, nil, TearFlagsLib.GetTearFlagParams(donor), true)
+	TearFlagsLib.AddTearFlags(recipient, TearFlagsLib.GetTearFlags(donor) &~ (TearFlagsLib.VolatileFlags or TearFlagsLib.BitSetInfinity.Zero))
+	TearFlagsLib.TryCopyTearFlagParams(recipient, donor, params.wipe)
 	TearFlagsLib.TryCopyBlacklist(recipient, donor)
 
 	if not params.skipVanilla then
@@ -470,6 +471,15 @@ function TearFlagsLib.CopyTearFlags(recipient, donor, weaponFlag, params) -- wea
 			callbackData.Function(callbackData.Mod, recipient, donor, weaponFlag)
 		end
 	end
+end
+
+function TearFlagsLib.TryCopyTearFlagParams(recipient, donor, force)
+	TearFlagsLib.GetTearFlags(donor):ForEach(function(flag)
+		local donorParams = TearFlagsLib.GetTearFlagParams(donor, flag)
+		if force or not donorParams.DoNotCopyParams then
+			TearFlagsLib.SetTearFlagParams(recipient, flag, donorParams)
+		end
+	end)
 end
 
 function TearFlagsLib.TryCopyBlacklist(recipient, donor)
@@ -506,7 +516,6 @@ end
 	-- integer:	ScaleOverride 		(For modifying the size of sticky-type tears and some tear-spawns like Explosions)
 	-- Color:	ColorOverride		(For modifying the colour of tear-spawns like Explosions)
 	-- boolean:	RemoveStickyTears	(For automatically removing all sticky-type tears if your Weapon has custom behaviour)
-	-- boolean: RemoveSplashDamage  (For automatically removing )
 function TearFlagsLib.ApplyVanillaTearFlagEffectsToEntity(entity, flags, player, flagsSource, params)
 	flags = flags or BitSet128(0, 0)
 	player = player or Isaac.GetPlayer()
@@ -634,7 +643,6 @@ function TearFlagsLib.FireSplitTear(spawner, velocity, player, params)
 	params = params or {}
 
 	local variant = 0
-
 	if params.TearVariant then
 		variant = params.TearVariant
 	elseif spawner.Type == 2 then
@@ -654,26 +662,21 @@ function TearFlagsLib.FireSplitTear(spawner, velocity, player, params)
 		TearFlagsLib.SetTearScale(tear, tear.Scale * (params.ScaleMult or 0.5))
 	end
 
+	-- Attribute setting
 	tear.Color = params.ColorOverride or spawner.Color
 	tear.CollisionDamage = params.DamageOverride or ((spawner.CollisionDamage or player.Damage) * (params.DamageMult or 0.5))
 	tear.CanTriggerStreakEnd = params.CanTriggerStreakEnd or false
+
+	-- Custom Tear Flags Cloning
+	TearFlagsLib.VolatileFlags = params.RemoveCustomFlags
 	Isaac.RunCallbackWithParam(ModCallbacks.MC_POST_FIRE_SPLIT_TEAR, params.SplitTearType or "TearFlagsLibGeneric", tear, spawner, params.SplitTearType or "TearFlagsLibGeneric")
+	TearFlagsLib.VolatileFlags = nil
 
-	tear.TearFlags = tear.TearFlags | TearFlagsLib.GetCustomVanillaTearFlags(tear)
-
-	if not params.SkipRemoveOnSplitFlags then
-		tear.TearFlags = tear.TearFlags &~ TearFlagsLib.REMOVE_ON_SPLITSHOT_FLAGS
-	end
-
+	-- Vanilla Tear Flags Cloning
+	local toRemoveVanilla = params.RemoveFlags or TearFlagsLib.BitSetZero
+	if not params.SkipRemoveOnSplitFlags then toRemoveVanilla = toRemoveVanilla | TearFlagsLib.REMOVE_ON_SPLITSHOT_FLAGS end
+	tear.TearFlags = (tear.TearFlags | TearFlagsLib.GetCustomVanillaTearFlags(tear) | TearFlagsLib.GetCustomVanillaTearFlags(spawner)) &~ toRemoveVanilla
 	TearFlagsLib.WipeCustomVanillaTearFlags(tear)
-
-	if params.RemoveFlags then
-		tear.TearFlags = tear.TearFlags &~ params.RemoveFlags
-	end
-
-	if params.RemoveCustomFlags then
-		TearFlagsLib.ClearTearFlags(tear, params.RemoveCustomFlags)
-	end
 
 	return tear
 end
@@ -723,7 +726,6 @@ function TearFlagsLib.FireSplitBomb(spawner, velocity, player, params)
 	params = params or {}
 
 	local variant = 0
-
 	if params.BombVariant then
 		variant = params.BombVariant
 	elseif spawner.Type == 4 then
@@ -733,33 +735,28 @@ function TearFlagsLib.FireSplitBomb(spawner, velocity, player, params)
 	end
 
 	local bomb = Isaac.Spawn(4, variant, 0, params.PositionOverride or spawner.Position, velocity, player):ToBomb()
+	bomb.Flags = spawner.Flags or spawner.TearFlags or bomb.Flags
+
+	-- Attribute setting
 	bomb:SetScale(params.ScaleOverride or 0.5)
 	bomb.RadiusMultiplier = 0.6
 	bomb.IsFetus = true
 	bomb.Color = params.ColorOverride or spawner.Color
 	bomb.ExplosionDamage = params.DamageOverride or ((spawner.ExplosionDamage or 100) * (params.DamageMult or 0.5))
-	bomb.Flags = spawner.Flags or spawner.TearFlags or bomb.Flags
-	-- This is where I would call MC_POST_FIRE_SPLIT_BOMB if it existed
 	
+	-- Custom Tear Flags Cloning
+	TearFlagsLib.VolatileFlags = params.RemoveCustomFlags
 	TearFlagsLib.CopyTearFlags(bomb, spawner, TearFlagsLib.WeaponFlag.DR_FETUS, {wipe = true})
-	bomb:AddTearFlags(TearFlagsLib.GetCustomVanillaTearFlags(bomb))
+	-- This is where I would call MC_POST_FIRE_SPLIT_BOMB if it existed
+	TearFlagsLib.VolatileFlags = nil
 
-
-	if not params.SkipRemoveOnSplitFlags then
-		bomb:ClearTearFlags(TearFlagsLib.REMOVE_ON_SPLITSHOT_FLAGS)
-	end
-
+	-- Vanilla Tear Flags Cloning
+	local toRemoveVanilla = params.RemoveFlags or TearFlagsLib.BitSetZero
+	if not params.SkipRemoveOnSplitFlags then toRemoveVanilla = toRemoveVanilla | TearFlagsLib.REMOVE_ON_SPLITSHOT_FLAGS end
+	bomb.Flags = (bomb.Flags | TearFlagsLib.GetCustomVanillaTearFlags(bomb) | TearFlagsLib.GetCustomVanillaTearFlags(spawner)) &~ toRemoveVanilla
 	TearFlagsLib.WipeCustomVanillaTearFlags(bomb)
-
-	if params.RemoveFlags then
-		bomb:ClearTearFlags(params.RemoveFlags)
-	end
-
-	if params.RemoveCustomFlags then
-		TearFlagsLib.ClearTearFlags(bomb, params.RemoveCustomFlags)
-	end
-
 	bomb:SetLoadCostumes(true)
+
 	return bomb
 end
 
@@ -849,12 +846,11 @@ end
 	-- number:	NumLasers 	(Defaults to 6)
 	-- boolean:	NoBurstSfx 	(Defaults to false)
 function TearFlagsLib.FireSplitLaserMonstroBurst(spawner, direction, player, rng, params)
-	local playBurstSfx = params.PlayMonstroBurstSfx
+	local lasers = {}
+	params = params or {}
     posOffset = posOffset or Vector(0, -20)
 
-    local lasers = {}
-
-    for _, laserInfo in ipairs(TearFlagsLib.GetMonstroLaserBurstInfo(params.PositionOverride or spawner.Position, direction, params.NumLasers)) do
+    for _, laserInfo in ipairs(TearFlagsLib.GetMonstroLaserBurstInfo(params.PositionOverride or spawner.Position, direction, params.NumLasers, rng)) do
         local laser = TearFlagsLib.FireSplitLaser(spawner, laserInfo.Dir, player, TearFlagsLib.FuzzyReplaceTable(params, {
         	PositionOverride = laserInfo.Pos,
         	ScaleMult = laserInfo.ScaleMult,
