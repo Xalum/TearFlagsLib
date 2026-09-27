@@ -277,7 +277,9 @@ Number | `DamageMult` | Multiplies the amount of damage being dealt
 Number | `ExtraDamage` | Adds this amount of extra damage to the damage being dealt, applied before DamageMult
 Number | `ExtraDamageFlat` | Adds this amount of extra damage to the damage being dealt, applied after DamageMult
 
-TearFlagParams can be applied to a WeaponEntity using the function `TearFlagsLib.SetTearFlagParams(WeaponEntity, TearFlag, NewParams, Override)`, which additionally takes its own optional parameters when calling:
+TearFlagParams can be applied to a WeaponEntity using the function `TearFlagsLib.SetTearFlagParams(WeaponEntity, TearFlag, NewParams, Override)`
+
+Additionally, `TearFlagsLib.DamageEntity` takes its own optional parameters when calling:
 Variable Type | Param | Description
 --- | --- | ---
 Entity | `DamageSource` | Overrides the entity passed to Entity:TakeDamage as the damage source. Defaults to `WeaponEntity`
